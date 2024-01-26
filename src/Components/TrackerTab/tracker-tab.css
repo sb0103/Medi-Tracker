@@ -1,0 +1,34 @@
+.empty-bar {
+  height: 4rem;
+}
+.tracker-details-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: row;
+  height: 4rem;
+}
+
+.tracker-details-bar > div {
+  flex: 1;
+}
+
+.tracker-month-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: row;
+  height: 4rem;
+}
+
+.tracker-details {
+  overflow: scroll;
+  padding: 1rem;
+}
+
+.tracker-day-cell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: column;
+}

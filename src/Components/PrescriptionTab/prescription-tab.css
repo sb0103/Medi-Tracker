@@ -1,0 +1,67 @@
+.patient-bar {
+  height: 4rem;
+  padding: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: right;
+}
+
+.patient-details {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: row;
+}
+
+.patient-details > * {
+  flex: 1;
+}
+
+.prescription-bar {
+  height: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: row;
+}
+
+.medicines {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-direction: column;
+}
+
+.medicine {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: row;
+  width: 100%;
+}
+
+.medicine > * {
+  padding: 0.5rem;
+}
+
+.pres-btn-bar {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.pres-btn-bar > * {
+  margin: 0.5rem !important;
+  flex: 1;
+}
+
+.timings {
+  width: 35rem;
+  max-width: 90vw;
+}
+
+@media (max-width: 500px) {
+  .prescription-bar {
+    flex-direction: column;
+  }
+}

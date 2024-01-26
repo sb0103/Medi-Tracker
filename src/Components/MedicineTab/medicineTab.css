@@ -1,0 +1,7 @@
+.medicine-bar {
+  height: 4rem;
+  padding: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: right;
+}
