@@ -300,7 +300,6 @@ function ListItem({
   const [listVal, setListVal] = useState([]);
 
   useEffect(() => {
-    setListVal(listItem);
     if (
       listItem.medicineName === "" &&
       listItem.doze === "" &&
@@ -321,7 +320,7 @@ function ListItem({
             justifyContent: "center",
           }}
         >
-          <Typography>{listVal.medicineName}</Typography>
+          <Typography>{listItem.medicineName}</Typography>
         </div>
         <div
           style={{
@@ -331,7 +330,7 @@ function ListItem({
             justifyContent: "center",
           }}
         >
-          <Typography> {listVal.doze} </Typography>
+          <Typography> {listItem.doze} </Typography>
         </div>
         <div
           style={{
@@ -344,7 +343,7 @@ function ListItem({
           <FormDialog
             btnContent={"View Timings"}
             btnVariant="text"
-            btnSx={0.7}
+            btnSx={{ fontSize: "0.7rem" }}
             title={"View Timings"}
             content=""
             form={
@@ -410,21 +409,29 @@ function ListItem({
               sx={{ width: "100%", color: "grey" }}
               labelId={`label${i}1`}
               label="Select Medicine"
-              value={listVal.medicineName}
+              value={listItem.medicineName}
               onChange={(e) => {
-                setListVal((prevState) => {
-                  return {
-                    ...prevState,
-                    medicineName: e.target.value,
-                    doze: "",
-                  };
+                setListItem({
+                  ...listItem,
+                  medicineName: e.target.value,
+                  doze: "",
                 });
+
+                // setListVal((prevState) => {
+                //   return {
+                //     ...prevState,
+                //     medicineName: e.target.value,
+                //     doze: "",
+                //   };
+                // });
               }}
             >
-              <MenuItem value={""}>None</MenuItem>
-              {medicines.map((med) => {
+              <MenuItem key={"none"} value={""}>
+                None
+              </MenuItem>
+              {medicines.map((med, i) => {
                 return (
-                  <MenuItem value={med.medicineName}>
+                  <MenuItem key={`med ${i}`} value={med.medicineName}>
                     {med.medicineName}
                   </MenuItem>
                 );
@@ -446,18 +453,26 @@ function ListItem({
               sx={{ width: "100%", color: "grey" }}
               labelId={`label${i}2`}
               label="Select Doze"
-              value={listVal.doze}
+              value={listItem.doze}
               onChange={(e) => {
-                setListVal((prevState) => {
-                  return { ...prevState, doze: e.target.value };
-                });
+                setListItem({ ...listItem, doze: e.target.value });
+
+                // setListVal((prevState) => {
+                //   return { ...prevState, doze: e.target.value };
+                // });
               }}
             >
-              <MenuItem value={""}>None</MenuItem>
+              <MenuItem key={"None"} value={""}>
+                None
+              </MenuItem>
               {medicines
-                .filter((med) => med.medicineName === listVal.medicineName)
-                .map((med) => {
-                  return <MenuItem value={med.doze}>{med.doze}</MenuItem>;
+                .filter((med) => med.medicineName === listItem.medicineName)
+                .map((med, i) => {
+                  return (
+                    <MenuItem key={`doze ${i}`} value={med.doze}>
+                      {med.doze}
+                    </MenuItem>
+                  );
                 })}
             </Select>
           </FormControl>
@@ -501,11 +516,11 @@ function ListItem({
             onClick={() => {
               let _id = medicines.find((med) => {
                 return (
-                  med.medicineName === listVal.medicineName &&
-                  med.doze === listVal.doze
+                  med.medicineName === listItem.medicineName &&
+                  med.doze === listItem.doze
                 );
               })?._id;
-              setListItem({ ...listVal, _id });
+              setListItem({ ...listItem, _id });
               setEditState(false);
             }}
           >
@@ -544,7 +559,7 @@ function SelectTimings({ times, setTimes, viewOnly = false }) {
           <SelectDailyTimings
             repetations={times.repetations}
             setRepeations={(r) => {
-              if (viewOnly === false) setTimes({ ...times, repetations: r });
+              setTimes({ ...times, repetations: r });
             }}
             viewOnly={viewOnly}
           />
@@ -552,7 +567,7 @@ function SelectTimings({ times, setTimes, viewOnly = false }) {
           <SelectWeeklyTimings
             repetations={times.repetations}
             setRepeations={(r) => {
-              if (viewOnly === false) setTimes({ ...times, repetations: r });
+              setTimes({ ...times, repetations: r });
             }}
             viewOnly={viewOnly}
           />
@@ -560,7 +575,7 @@ function SelectTimings({ times, setTimes, viewOnly = false }) {
           <SelectMonthlyTimings
             repetations={times.repetations}
             setRepeations={(r) => {
-              if (viewOnly === false) setTimes({ ...times, repetations: r });
+              setTimes({ ...times, repetations: r });
             }}
             viewOnly={viewOnly}
           />
@@ -568,11 +583,11 @@ function SelectTimings({ times, setTimes, viewOnly = false }) {
           <SelectAlternateDayTimings
             repetations={times.repetations}
             setRepeations={(r) => {
-              if (viewOnly === false) setTimes({ ...times, repetations: r });
+              setTimes({ ...times, repetations: r });
             }}
             firstDay={times.firstDay}
             setFirstDay={(fd) => {
-              if (viewOnly === false) setTimes({ ...times, firstDay: fd });
+              setTimes({ ...times, firstDay: fd });
             }}
             viewOnly={viewOnly}
           />
@@ -610,6 +625,7 @@ function SelectDailyTimings({ repetations, setRepeations, viewOnly }) {
       {repetations?.map((obj, i) => {
         return (
           <Box
+            key={`TimePicker ${i}`}
             sx={{
               display: "flex",
               alignItems: "center",
@@ -621,7 +637,6 @@ function SelectDailyTimings({ repetations, setRepeations, viewOnly }) {
               <Container
                 sx={{ p: "1rem", width: "100%" }}
                 components={["TimePicker"]}
-                fullWidth
               >
                 <TimePicker
                   fullWidth
