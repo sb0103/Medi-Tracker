@@ -22,7 +22,6 @@
 }
 
 .tracker-details {
-  overflow: scroll;
   padding: 1rem;
 }
 
@@ -31,4 +30,5 @@
   align-items: center;
   justify-content: space-between;
   flex-direction: column;
+  color: black;
 }

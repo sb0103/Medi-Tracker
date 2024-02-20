@@ -8,54 +8,47 @@ import {
   FormControl,
   Box,
 } from "@mui/material";
-import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
+import ModeEditOutlineOutlinedIcon from "@mui/icons-material/ModeEditOutlineOutlined";
+
 import BasicTable from "../BasicTable/BasicTable";
 import FormDialog from "../FormDialog/FormDialog";
+import SimpleAlert from "../Alert/Alert";
+import { addMedicine, modifyMedicine } from "../NetworkCalls/medicines";
 
 import "./medicineTab.css";
 import { useState } from "react";
+import { Palette } from "@mui/icons-material";
 
-const fetchMedicines = () => {
-  return [
-    {
-      _id: 32942531,
-      name: "Name1",
-      doze: "100mg",
-      description: "",
-    },
-    {
-      _id: 32942532,
-      name: "Name2",
-      doze: "100mg",
-      description: "",
-    },
-    {
-      _id: 32942533,
-      name: "Name3",
-      doze: "100mg",
-      description: "",
-    },
-    {
-      _id: 32942534,
-      name: "Name4",
-      doze: "100mg",
-      description: "",
-    },
-    {
-      _id: 32942535,
-      name: "Name5",
-      doze: "100mg",
-      description: "",
-    },
-  ];
-};
-
-export default function MedicineTab({ medicines, setMedicines }) {
+export default function MedicineTab({ medicines, setMedicines, logged }) {
   const [formInput, setFormInput] = useState([{ medicineName: "", doze: "" }]);
   const [formInput2, setFormInput2] = useState({ medicineName: "", doze: "" });
+  const [alert, setAlert] = useState({
+    isOpen: false,
+    message: "",
+    severity: "error",
+  });
+
+  const verifyMedicineData = (formData) => {
+    for (let i = 0; i < formData.length; i++) {
+      if (formData[i].medicineName.length < 3 && formData[i].doze.length < 3) {
+        return false;
+      }
+    }
+    return true;
+  };
 
   return (
     <>
+      <SimpleAlert
+        isOpen={alert.isOpen}
+        setOpen={(b) => {
+          setAlert((ov) => {
+            return { ...ov, isOpen: b };
+          });
+        }}
+        message={alert.message}
+        severity={alert.severity}
+      />
       <div className="medicine-bar">
         <FormDialog
           btnSx={{ mr: "1rem" }}
@@ -66,15 +59,30 @@ export default function MedicineTab({ medicines, setMedicines }) {
           form={
             <AddMedicine formInput={formInput} setFormInput={setFormInput} />
           }
-          onClose={(success) => {
-            if (success && formInput.name !== "" && formInput.doze !== "")
-              setMedicines((medicines) => [...medicines, ...formInput]);
-            /**
-             * //TODO: NETWORK CALL
-             *
-             *  Make a network call and add the medicine to the medicines State
-             *
-             */
+          onClose={async (success) => {
+            if (success && verifyMedicineData(formInput)) {
+              let medArr = formInput;
+
+              for (let i = 0; i < formInput.length; i++) {
+                let medID = await addMedicine(
+                  logged.token,
+                  (message, severity) => {
+                    setAlert({ isOpen: true, message, severity });
+                  },
+                  medArr[i]
+                );
+
+                medArr[i]._id = medID;
+              }
+
+              setMedicines((medicines) => [...medicines, ...medArr]);
+            } else if (success) {
+              setAlert({
+                isOpen: true,
+                message: "Invalid Medicine name or Doze",
+                severity: "error",
+              });
+            }
           }}
           onOpen={() => {
             setFormInput([{ medicineName: "", doze: "" }]);
@@ -93,18 +101,34 @@ export default function MedicineTab({ medicines, setMedicines }) {
               setFormInput={setFormInput2}
             />
           }
-          onClose={(success) => {
-            if (success) {
+          onClose={async (success) => {
+            if (
+              success &&
+              formInput2.medicineName.length >= 3 &&
+              formInput2.doze.length >= 3
+            ) {
               setMedicines((meds) => [...meds, formInput2]);
+              setAlert({
+                isOpen: true,
+                message: "Doze successfully Added",
+                severity: "success",
+              });
+
+              await addMedicine(
+                logged.token,
+                (message, severity) => {
+                  setAlert({ isOpen: true, message, severity });
+                },
+                formInput2
+              );
+            } else if (success) {
+              setAlert({
+                isOpen: true,
+                message: "Invalid Doze",
+                severity: "error",
+              });
             }
           }}
-          /**
-           *  TODO NetWorkcall
-           *
-           *  Make a network call and add the medicine to the medicines State
-           *
-           */
-
           onOpen={() => {
             setFormInput2({ medicineName: "", doze: "" });
           }}
@@ -116,7 +140,13 @@ export default function MedicineTab({ medicines, setMedicines }) {
           med.medicineName,
           med.doze,
           med.description,
-          <MedicineActionBar setMedicines={setMedicines} _id={med._id} />,
+          <MedicineActionBar
+            medicines={medicines}
+            setMedicines={setMedicines}
+            _id={med._id}
+            logged={logged}
+            setAlert={setAlert}
+          />,
         ])}
       />
     </>
@@ -166,7 +196,7 @@ function AddMedicine({ formInput, setFormInput }) {
                 sx={{ width: "40%", m: "1rem" }}
                 variant="outlined"
                 label="Medicine Name"
-                Value={item.medicineName}
+                value={item.medicineName}
                 onChange={(e) => {
                   setFormInput((meds) => {
                     return meds.map((med, idx) => {
@@ -185,7 +215,7 @@ function AddMedicine({ formInput, setFormInput }) {
                 sx={{ width: "40%", m: "1rem" }}
                 variant="outlined"
                 label="Doze"
-                Value={item.doze}
+                value={item.doze}
                 onChange={(e) => {
                   setFormInput((meds) => {
                     return meds.map((med, idx) => {
@@ -244,7 +274,7 @@ function AddDoze({ medicines, formInput, setFormInput }) {
           sx={{ width: "100%" }}
           variant="outlined"
           label="Doze"
-          Value={formInput.doze}
+          value={formInput.doze}
           onChange={(e) => {
             setFormInput((val) => {
               return { ...val, doze: e.target.value };
@@ -256,18 +286,120 @@ function AddDoze({ medicines, formInput, setFormInput }) {
   );
 }
 
-function MedicineActionBar({ _id, setMedicines }) {
+function EditMedicine({ formInput, setFormInput }) {
   return (
-    <Button
-      onClick={() => {
-        setMedicines((prevState) => {
-          return prevState.filter((val) => val._id !== _id);
-        });
+    <>
+      <Stack
+        sx={{
+          display: "flex",
+          m: "2rem",
+          height: "10rem",
+          justifyContent: "space-between",
+          alignItems: "center",
+          width: "25rem",
+          rowGap: "1rem",
+        }}
+      >
+        <TextField
+          sx={{ width: "100%" }}
+          variant="outlined"
+          label="Medicine Name"
+          value={formInput.medicineName}
+          onChange={(e) => {
+            setFormInput((val) => {
+              return { ...val, medicineName: e.target.value };
+            });
+          }}
+        />
+        <TextField
+          sx={{ width: "100%" }}
+          variant="outlined"
+          label="Doze"
+          value={formInput.doze}
+          onChange={(e) => {
+            setFormInput((val) => {
+              return { ...val, doze: e.target.value };
+            });
+          }}
+        />
+        <TextField
+          sx={{ width: "100%" }}
+          variant="outlined"
+          label="Description"
+          value={formInput.description}
+          onChange={(e) => {
+            setFormInput((val) => {
+              return { ...val, description: e.target.value };
+            });
+          }}
+        />
+      </Stack>
+    </>
+  );
+}
 
-        //TODO: NETWORK CALL
+function MedicineActionBar({ medicines, _id, setMedicines, logged, setAlert }) {
+  const [formInput, setFormInput] = useState({
+    _id,
+    medicineName: "",
+    doze: "",
+    description: "",
+  });
+
+  const verifyMedicineData = (data) => {
+    if (data.medicineName.length < 1 || data.doze.length < 1) {
+      return false;
+    }
+    return true;
+  };
+
+  return (
+    <FormDialog
+      btnContent={<ModeEditOutlineOutlinedIcon color="secondary" />}
+      btnVariant="outlined"
+      btnSx={{ color: "secondary" }}
+      btnClassName="edit-btn"
+      title="Edit Medicine Details"
+      content=""
+      form={<EditMedicine formInput={formInput} setFormInput={setFormInput} />}
+      onOpen={() => {
+        let med = medicines.find((med) => {
+          return med._id === _id;
+        });
+        if (!med) {
+          throw new Error(`Error finding the medicine with the _id: ${_id}`);
+        }
+
+        setFormInput(med);
       }}
-    >
-      <DeleteRoundedIcon />
-    </Button>
+      onClose={async (success) => {
+        if (success && verifyMedicineData(formInput)) {
+          if (
+            await modifyMedicine(
+              logged.token,
+              (message, severity) => {
+                setAlert({ isOpen: true, message, severity });
+              },
+              {
+                medicineName: formInput.medicineName,
+                doze: formInput.doze,
+                description: formInput.description,
+                medID: formInput._id,
+              }
+            )
+          ) {
+            setMedicines((meds) => {
+              return meds.map((med) => {
+                if (med._id === _id) {
+                  return formInput;
+                } else {
+                  return med;
+                }
+              });
+            });
+          }
+        }
+      }}
+    />
   );
 }

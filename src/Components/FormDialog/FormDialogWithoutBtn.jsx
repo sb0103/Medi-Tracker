@@ -7,6 +7,10 @@ import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 
 /**
+ * @param { Boolean } open, it is state to control open and close of the dialogbox
+ *
+ * @param { Object.function } setOpen
+ *
  *
  * @param {String} btnContent
  *          Content inside the Btn,
@@ -24,24 +28,15 @@ import DialogTitle from "@mui/material/DialogTitle";
  *          Function: params - success
  */
 export default function FormDialog({
-  btnContent,
-  btnVariant,
-  btnSx = {},
-  btnClassName = "",
+  open,
+  setOpen,
   title,
   content,
   form,
   onClose = () => {},
-  onOpen = () => {},
   removeCancel = false,
+  replaceCancelWith = "",
 }) {
-  const [open, setOpen] = React.useState(false);
-
-  const handleClickOpen = () => {
-    onOpen();
-    setOpen(true);
-  };
-
   const handleClose = (success) => {
     onClose(success);
     setOpen(false);
@@ -49,14 +44,6 @@ export default function FormDialog({
 
   return (
     <React.Fragment>
-      <Button
-        className={btnClassName}
-        variant={btnVariant}
-        sx={btnSx}
-        onClick={handleClickOpen}
-      >
-        {btnContent}
-      </Button>
       <Dialog
         open={open}
         onClose={() => {
@@ -76,7 +63,7 @@ export default function FormDialog({
                 handleClose(false);
               }}
             >
-              Cancel
+              {replaceCancelWith === "" ? "Cancel" : replaceCancelWith}
             </Button>
           ) : (
             <></>

@@ -1,0 +1,5 @@
+.basicTable {
+  overflow-x: scroll;
+  scrollbar-width: 10px;
+  scroll-margin: 5px;
+}

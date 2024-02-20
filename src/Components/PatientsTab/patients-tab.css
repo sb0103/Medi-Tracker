@@ -5,3 +5,10 @@
   align-items: center;
   justify-content: right;
 }
+
+.edit-btn {
+  border: 1px solid var(--color-tertiary) !important;
+}
+.delete-btn {
+  border: 1px solid red !important;
+}

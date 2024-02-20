@@ -9,15 +9,32 @@
 
 .nav-bar-logo {
   font-size: 2rem;
+  font-weight: 300;
   color: var(--color-primary);
   padding: 1rem;
   padding-left: 2rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  column-gap: 2px;
+  letter-spacing: -2px;
+}
+
+.logo-img {
+  width: 4rem;
+  height: 4rem;
+  object-fit: contain;
+  object-position: center;
+  margin-bottom: 0.5rem;
 }
 
 .nav-bar-leftGroup {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   padding: 1rem;
   padding-right: 2rem;
-  width: 15rem;
+  width: 22rem;
+  column-gap: 0.8rem;
 }
