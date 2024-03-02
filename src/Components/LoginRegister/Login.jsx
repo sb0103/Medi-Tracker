@@ -3,6 +3,7 @@ import "./login.css";
 import { useHistory, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { login } from "../NetworkCalls/auth";
+import dayjs from "dayjs";
 
 export default function Login({ setAlert, logged, setLogged, setUserDetails }) {
   const [loginForm, setLoginForm] = useState({
@@ -22,7 +23,20 @@ export default function Login({ setAlert, logged, setLogged, setUserDetails }) {
         severity: "info",
       });
     }
+
+    let data = localStorage.getItem("loginData");
+
+    if (data && dayjs(data.expiry).isAfter(dayjs())) {
+      let { username, email, token } = JSON.parse(data);
+
+      setUserDetails({ username, email });
+      setLogged({ isLogged: true, token: token });
+
+      history.push("/app");
+    }
   }, []);
+
+  useEffect(() => {}, [logged]);
 
   const verifyLoginForm = (form) => {
     let { password, email } = form;
@@ -122,9 +136,10 @@ export default function Login({ setAlert, logged, setLogged, setUserDetails }) {
 
                 if (data) {
                   let { username, email, token } = data;
-
+                  data.expiry = dayjs().add(7, "days").format();
                   setUserDetails({ username, email });
                   setLogged({ isLogged: true, token: token });
+                  localStorage.setItem("loginData", JSON.stringify(data));
 
                   history.push("/app");
                 }

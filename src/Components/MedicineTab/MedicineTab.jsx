@@ -20,7 +20,9 @@ import { useState } from "react";
 import { Palette } from "@mui/icons-material";
 
 export default function MedicineTab({ medicines, setMedicines, logged }) {
-  const [formInput, setFormInput] = useState([{ medicineName: "", doze: "" }]);
+  const [formInput, setFormInput] = useState([
+    { medicineName: "", doze: "", description: "" },
+  ]);
   const [formInput2, setFormInput2] = useState({ medicineName: "", doze: "" });
   const [alert, setAlert] = useState({
     isOpen: false,
@@ -166,7 +168,10 @@ function AddMedicine({ formInput, setFormInput }) {
         <Button
           variant="outlined"
           onClick={() => {
-            setFormInput((meds) => [...meds, { medicineName: "", doze: "" }]);
+            setFormInput((meds) => [
+              ...meds,
+              { medicineName: "", doze: "", description: "" },
+            ]);
           }}
         >
           Add
@@ -225,6 +230,28 @@ function AddMedicine({ formInput, setFormInput }) {
                         return {
                           medicineName: med.medicineName,
                           doze: e.target.value,
+                        };
+                      }
+                    });
+                  });
+                }}
+              />
+              <TextField
+                key={`input${i}c`}
+                sx={{ width: "40%", m: "1rem" }}
+                variant="outlined"
+                label="Description"
+                value={item.description}
+                onChange={(e) => {
+                  setFormInput((meds) => {
+                    return meds.map((med, idx) => {
+                      if (i !== idx) {
+                        return med;
+                      } else {
+                        return {
+                          medicineName: med.medicineName,
+                          doze: med.doze,
+                          description: e.target.value,
                         };
                       }
                     });

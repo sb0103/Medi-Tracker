@@ -49,6 +49,7 @@ export default function NavBar({
               onClick={() => {
                 if (logged.isLogged) {
                   setLogged({ isLogged: false, token: "" });
+                  localStorage.removeItem("loginData");
                   history.push("/login");
                 } else {
                   history.push("/login");

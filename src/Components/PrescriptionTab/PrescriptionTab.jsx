@@ -5,11 +5,14 @@ import SimpleAlert from "../Alert/Alert";
 
 import BasicTable from "../BasicTable/BasicTable";
 import FormDialog from "../FormDialog/FormDialog";
+import FormDialogWithoutBtn from "../FormDialog/FormDialogWithoutBtn";
 
 import AddPrescription from "./AddPrescription";
 import ViewPrescription from "./ViewPrescription";
 
 import { setPrescription as putPrescription } from "../NetworkCalls/prescription";
+import { clearTracker } from "../NetworkCalls/tracker";
+import { Typography } from "@mui/material";
 
 export default function PrescriptionTab({
   medicines,
@@ -23,8 +26,37 @@ export default function PrescriptionTab({
     severity: "error",
   });
 
+  const [dialogBox, setDialogBox] = useState(false);
+  const [toClearPatientID, setToClearPatientID] = useState("");
+
   return (
     <>
+      <FormDialogWithoutBtn
+        open={dialogBox}
+        setOpen={setDialogBox}
+        title="Do you want to clear old tracker data?"
+        content=""
+        form={
+          <Typography sx={{ fontWeight: 300 }}>
+            This action will clear All the Tracker data, procced with caution
+            <br />
+            only clear the data if it is not just an addition of new medicine
+            <br />
+            but a new prescription for the patient.
+          </Typography>
+        }
+        onClose={async (success) => {
+          if (success) {
+            await clearTracker(
+              logged.token,
+              (message, severity) => {
+                setAlert({ isOpen: true, message, severity });
+              },
+              toClearPatientID
+            );
+          }
+        }}
+      />
       <SimpleAlert
         isOpen={alert.isOpen}
         setOpen={(b) => {
@@ -87,14 +119,19 @@ export default function PrescriptionTab({
                     times: p.times,
                   };
                 });
-                await putPrescription(
-                  logged.token,
-                  (message, severity) => {
-                    setAlert({ isOpen: true, message, severity });
-                  },
-                  val._id,
-                  presc
-                );
+                if (
+                  await putPrescription(
+                    logged.token,
+                    (message, severity) => {
+                      setAlert({ isOpen: true, message, severity });
+                    },
+                    val._id,
+                    presc
+                  )
+                ) {
+                  setToClearPatientID(val._id);
+                  setDialogBox(true);
+                }
               }}
               removeCancel
             />

@@ -39,4 +39,21 @@ const postTracker = async (token, setAlert, patientID, body) => {
   }
 };
 
-export { getTracker, postTracker };
+const clearTracker = async (token, setAlert, patientID) => {
+  try {
+    await axios.delete(`${BE_URL}/tracker/${patientID}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setAlert("Tracker Data has been cleared.", "success");
+    return true;
+  } catch (err) {
+    if (err.response) {
+      setAlert(err.response.data.message, "error");
+    } else {
+      setAlert(err.message, "error");
+    }
+    return false;
+  }
+};
+
+export { getTracker, postTracker, clearTracker };

@@ -11,13 +11,6 @@ import DialogTitle from "@mui/material/DialogTitle";
  *
  * @param { Object.function } setOpen
  *
- *
- * @param {String} btnContent
- *          Content inside the Btn,
- * @param {String} btnVariant
- *          MUI button Variant
- * @param { Object } btnSx
- *          MUI Styling object SX
  * @param { String } title
  *          Title Text
  * @param { String } content
@@ -26,6 +19,9 @@ import DialogTitle from "@mui/material/DialogTitle";
  *          Form Component
  * @param { Object.function } onClose
  *          Function: params - success
+ * @param {Boolean} removeCancel
+ *
+ * @param { String } replaceCancelWith
  */
 export default function FormDialog({
   open,
@@ -52,7 +48,7 @@ export default function FormDialog({
         maxWidth="60rem"
       >
         <DialogTitle>{title}</DialogTitle>
-        <DialogContent sx={{ overflow: "hidden" }}>
+        <DialogContent sx={{ overflowY: "scroll" }}>
           <DialogContentText>{content}</DialogContentText>
           {form}
         </DialogContent>

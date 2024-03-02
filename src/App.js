@@ -3,7 +3,8 @@ import NavBar from "./Components/NavBar/NavBar";
 import * as React from "react";
 import SimpleAlert from "./Components/Alert/Alert";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import { Route, Switch, BrowserRouter } from "react-router-dom";
+import { Route, Switch, BrowserRouter, useHistory } from "react-router-dom";
+import { useEffect } from "react";
 
 import Login from "./Components/LoginRegister/Login";
 import Register from "./Components/LoginRegister/Register";
@@ -89,6 +90,7 @@ function App() {
                 setAlert={setAlert}
                 logged={logged}
                 setLogged={setLogged}
+                setUserDetails={setUserDetails}
               />
             </Route>
           </Switch>

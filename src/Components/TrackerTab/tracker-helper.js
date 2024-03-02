@@ -16,6 +16,8 @@ function MedicineTimings(patient, month, year) {
 
   for (let i = 0; i < prescription.length; i++) {
     let format = prescription[i].times.format;
+    let fd = prescription[i].times.firstDay;
+    let ld = prescription[i].times.lastDay;
 
     if (format === "daily") {
       let times = [];
@@ -24,6 +26,23 @@ function MedicineTimings(patient, month, year) {
 
       for (let d = 1; d <= ds; d++) {
         let timesd = [];
+
+        if (
+          dayjs(`${d}/${month}/${year}`, "D-MMMM-YYYY").isBefore(
+            dayjs(fd, "D/M/YYYY")
+          )
+        ) {
+          continue;
+        }
+
+        if (
+          dayjs(`${d}/${month}/${year}`, "D-MMMM-YYYY").isAfter(
+            dayjs(ld, "D/M/YYYY")
+          )
+        ) {
+          break;
+        }
+
         timingsEachDay.forEach((val) => {
           timesd.push(
             dayjs(`${d}/${month}/${year} ${val.time}`, "D-MMMM-YYYY H:m")
@@ -74,6 +93,15 @@ function MedicineTimings(patient, month, year) {
         }
 
         while (d.isSame(dayjs(`${year}/${month}/1`, "YYYY/MMMM/D"), "month")) {
+          if (d.isBefore(dayjs(fd, "D/M/YYYY"))) {
+            d = d.add(1, "week");
+            continue;
+          }
+
+          if (d.isAfter(dayjs(ld, "D/M/YYYY"))) {
+            break;
+          }
+
           let date = d.date() - 1;
 
           times[date].push(
@@ -112,6 +140,23 @@ function MedicineTimings(patient, month, year) {
       for (let j = 0; j < timingsEachMonth.length; j++) {
         let date = timingsEachMonth[j].date - 1;
         let t = timingsEachMonth[j].time;
+
+        if (
+          dayjs(`${date + 1}/${month}/${year}`, "D/MMMM/YYYY").isBefore(
+            dayjs(fd, "D/M/YYYY")
+          )
+        ) {
+          continue;
+        }
+
+        if (
+          dayjs(`${date + 1}/${month}/${year}`, "D/MMMM/YYYY").isAfter(
+            dayjs(ld, "D/M/YYYY")
+          )
+        ) {
+          break;
+        }
+
         if (date < ds) {
           times[date].push(
             dayjs(`${year}/${month}/${date} ${t}`, "YYYY/MMMM/D H:m")
@@ -160,6 +205,10 @@ function MedicineTimings(patient, month, year) {
 
       while (d.isSame(dayjs(`${year}/${month}/1`, "YYYY/MMMM/D"), "month")) {
         let date = d.date() - 1;
+
+        if (d.isAfter(dayjs(ld, "D/M/YYYY"))) {
+          break;
+        }
 
         let r = prescription[i].times.repetations;
         r.forEach((val) => {

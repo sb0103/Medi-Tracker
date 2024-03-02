@@ -3,8 +3,14 @@ import "./login.css";
 import { useHistory, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { register } from "../NetworkCalls/auth";
+import dayjs from "dayjs";
 
-export default function Register({ setAlert, logged }) {
+export default function Register({
+  setAlert,
+  logged,
+  setUserDetails,
+  setLogged,
+}) {
   const [regForm, setRegForm] = useState({
     username: "",
     password: "",
@@ -49,6 +55,17 @@ export default function Register({ setAlert, logged }) {
           "Already Logged In, Logout to LoginRegister with another email and password",
         severity: "info",
       });
+    }
+
+    let data = localStorage.getItem("loginData");
+
+    if (data && dayjs(data.expiry).isAfter(dayjs())) {
+      let { username, email, token } = JSON.parse(data);
+
+      setUserDetails({ username, email });
+      setLogged({ isLogged: true, token: token });
+
+      history.push("/app");
     }
   }, []);
 

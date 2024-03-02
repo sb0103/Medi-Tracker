@@ -37,7 +37,7 @@ export default function SelectTimings({ times, setTimes, viewOnly = false }) {
             <MenuItem value={"daily"}>Daily</MenuItem>
             <MenuItem value={"weekly"}>Weekly</MenuItem>
             <MenuItem value={"monthly"}>Monthly</MenuItem>
-            <MenuItem value={"alternate-day"}>Alternate Day</MenuItem>
+            {/* <MenuItem value={"alternate-day"}>Alternate Day</MenuItem> */}
           </Select>
         </FormControl>
 
@@ -47,6 +47,14 @@ export default function SelectTimings({ times, setTimes, viewOnly = false }) {
             setRepeations={(r) => {
               setTimes({ ...times, repetations: r });
             }}
+            firstDay={times.firstDay}
+            setFirstDay={(fd) => {
+              setTimes({ ...times, firstDay: fd });
+            }}
+            lastDay={times.lastDay}
+            setLastDay={(ld) => {
+              setTimes({ ...times, lastDay: ld });
+            }}
             viewOnly={viewOnly}
           />
         ) : times.format === "weekly" ? (
@@ -55,6 +63,14 @@ export default function SelectTimings({ times, setTimes, viewOnly = false }) {
             setRepeations={(r) => {
               setTimes({ ...times, repetations: r });
             }}
+            firstDay={times.firstDay}
+            setFirstDay={(fd) => {
+              setTimes({ ...times, firstDay: fd });
+            }}
+            lastDay={times.lastDay}
+            setLastDay={(ld) => {
+              setTimes({ ...times, lastDay: ld });
+            }}
             viewOnly={viewOnly}
           />
         ) : times.format === "monthly" ? (
@@ -62,6 +78,14 @@ export default function SelectTimings({ times, setTimes, viewOnly = false }) {
             repetations={times.repetations}
             setRepeations={(r) => {
               setTimes({ ...times, repetations: r });
+            }}
+            firstDay={times.firstDay}
+            setFirstDay={(fd) => {
+              setTimes({ ...times, firstDay: fd });
+            }}
+            lastDay={times.lastDay}
+            setLastDay={(ld) => {
+              setTimes({ ...times, lastDay: ld });
             }}
             viewOnly={viewOnly}
           />
@@ -75,6 +99,10 @@ export default function SelectTimings({ times, setTimes, viewOnly = false }) {
             setFirstDay={(fd) => {
               setTimes({ ...times, firstDay: fd });
             }}
+            lastDay={times.lastDay}
+            setLastDay={(ld) => {
+              setTimes({ ...times, lastDay: ld });
+            }}
             viewOnly={viewOnly}
           />
         ) : (
@@ -85,7 +113,15 @@ export default function SelectTimings({ times, setTimes, viewOnly = false }) {
   );
 }
 
-function SelectDailyTimings({ repetations, setRepeations, viewOnly }) {
+function SelectDailyTimings({
+  repetations,
+  setRepeations,
+  viewOnly,
+  firstDay,
+  setFirstDay,
+  lastDay,
+  setLastDay,
+}) {
   return (
     <>
       <Container
@@ -96,6 +132,33 @@ function SelectDailyTimings({ repetations, setRepeations, viewOnly }) {
           alignItems: "center",
         }}
       >
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <Container sx={{ p: "0", pr: "1rem", width: "100%" }}>
+            <DatePicker
+              fullWidth
+              sx={{ width: "100%" }}
+              label="Starting Date"
+              value={dayjs(firstDay, "D/M/YYYY")}
+              onChange={(newValue) => {
+                setFirstDay(newValue.format(`D/M/YYYY`));
+              }}
+              disabled={viewOnly}
+            />
+          </Container>
+          <Container sx={{ p: "0", pr: "1rem", width: "100%" }}>
+            <DatePicker
+              fullWidth
+              sx={{ width: "100%" }}
+              label="End Date"
+              value={dayjs(lastDay, "D/M/YYYY")}
+              onChange={(newValue) => {
+                setLastDay(newValue.format(`D/M/YYYY`));
+              }}
+              disabled={viewOnly}
+            />
+          </Container>
+        </LocalizationProvider>
+
         <Button
           variant="outlined"
           onClick={() => {
@@ -107,68 +170,104 @@ function SelectDailyTimings({ repetations, setRepeations, viewOnly }) {
         </Button>
       </Container>
       <Divider />
-
-      {repetations?.map((obj, i) => {
-        return (
-          <Box
-            key={`TimePicker ${i}`}
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              flexDirection: "row",
-            }}
-          >
-            <LocalizationProvider dateAdapter={AdapterDayjs} fullWidth>
-              <Container
-                sx={{ p: "1rem", width: "100%" }}
-                components={["TimePicker"]}
-              >
-                <TimePicker
-                  fullWidth
-                  sx={{ width: "100%" }}
-                  value={dayjs(obj.time, `H:m`)}
-                  label={`Timing ${i + 1}`}
-                  onChange={(e) => {
-                    setRepeations(
-                      repetations.map((v, idx) => {
-                        if (i === idx) {
-                          return { time: e.format(`H:m`) };
-                        } else {
-                          return v;
-                        }
-                      })
-                    );
-                  }}
-                  disabled={viewOnly}
-                />
-              </Container>
-            </LocalizationProvider>
-
-            <Button
-              sx={{ mr: "1rem" }}
-              onClick={() => {
-                setRepeations(
-                  repetations.filter((val, idx) => {
-                    return i !== idx;
-                  })
-                );
+      <Box className="scroll-y">
+        {repetations?.map((obj, i) => {
+          return (
+            <Box
+              key={`TimePicker ${i}`}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexDirection: "row",
               }}
-              disabled={viewOnly}
             >
-              <DeleteRoundedIcon color="primary" />
-            </Button>
-          </Box>
-        );
-      })}
+              <LocalizationProvider dateAdapter={AdapterDayjs} fullWidth>
+                <Container
+                  sx={{ p: "1rem", width: "100%" }}
+                  components={["TimePicker"]}
+                >
+                  <TimePicker
+                    fullWidth
+                    sx={{ width: "100%" }}
+                    value={dayjs(obj.time, `H:m`)}
+                    label={`Timing ${i + 1}`}
+                    onChange={(e) => {
+                      setRepeations(
+                        repetations.map((v, idx) => {
+                          if (i === idx) {
+                            return { time: e.format(`H:m`) };
+                          } else {
+                            return v;
+                          }
+                        })
+                      );
+                    }}
+                    disabled={viewOnly}
+                  />
+                </Container>
+              </LocalizationProvider>
+
+              <Button
+                sx={{ mr: "1rem" }}
+                onClick={() => {
+                  setRepeations(
+                    repetations.filter((val, idx) => {
+                      return i !== idx;
+                    })
+                  );
+                }}
+                disabled={viewOnly}
+              >
+                <DeleteRoundedIcon color="primary" />
+              </Button>
+            </Box>
+          );
+        })}
+      </Box>
       <Divider />
     </>
   );
 }
 
-function SelectWeeklyTimings({ repetations, setRepeations, viewOnly }) {
+function SelectWeeklyTimings({
+  repetations,
+  setRepeations,
+  viewOnly,
+  firstDay,
+  setFirstDay,
+  lastDay,
+  setLastDay,
+}) {
   return (
-    <Container sx={{ mt: "1.5rem" }}>
+    <Container className="scroll-y" sx={{ mt: "1.5rem" }}>
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <Container sx={{ m: "1rem", p: "0", pr: "1rem", width: "100%" }}>
+          <DatePicker
+            fullWidth
+            sx={{ width: "100%" }}
+            label="Starting Date"
+            value={dayjs(firstDay, "D/M/YYYY")}
+            onChange={(newValue) => {
+              setFirstDay(newValue.format(`D/M/YYYY`));
+            }}
+            disabled={viewOnly}
+          />
+        </Container>
+        <Container sx={{ m: "1rem", p: "0", pr: "1rem", width: "100%" }}>
+          <DatePicker
+            fullWidth
+            sx={{ width: "100%" }}
+            label="End Date"
+            value={dayjs(lastDay, "D/M/YYYY")}
+            onChange={(newValue) => {
+              setLastDay(newValue.format(`D/M/YYYY`));
+            }}
+            disabled={viewOnly}
+          />
+        </Container>
+      </LocalizationProvider>
+
       <Button
         variant="outlined"
         onClick={() => {
@@ -274,7 +373,15 @@ function SelectWeeklyTimings({ repetations, setRepeations, viewOnly }) {
   );
 }
 
-function SelectMonthlyTimings({ repetations, setRepeations, viewOnly }) {
+function SelectMonthlyTimings({
+  repetations,
+  setRepeations,
+  viewOnly,
+  firstDay,
+  setFirstDay,
+  lastDay,
+  setLastDay,
+}) {
   let daysArr = [];
   for (let i = 1; i <= 31; i++) {
     daysArr.push(i);
@@ -282,6 +389,33 @@ function SelectMonthlyTimings({ repetations, setRepeations, viewOnly }) {
 
   return (
     <Container sx={{ mt: "1.5rem" }}>
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <Container sx={{ m: "1rem", p: "0", pr: "1rem", width: "100%" }}>
+          <DatePicker
+            fullWidth
+            sx={{ width: "100%" }}
+            label="Starting Date"
+            value={dayjs(firstDay, "D/M/YYYY")}
+            onChange={(newValue) => {
+              setFirstDay(newValue.format(`D/M/YYYY`));
+            }}
+            disabled={viewOnly}
+          />
+        </Container>
+        <Container sx={{ m: "1rem", p: "0", pr: "1rem", width: "100%" }}>
+          <DatePicker
+            fullWidth
+            sx={{ width: "100%" }}
+            label="End Date"
+            value={dayjs(lastDay, "D/M/YYYY")}
+            onChange={(newValue) => {
+              setLastDay(newValue.format(`D/M/YYYY`));
+            }}
+            disabled={viewOnly}
+          />
+        </Container>
+      </LocalizationProvider>
+
       <Button
         variant="outlined"
         onClick={() => {
@@ -390,97 +524,113 @@ function SelectAlternateDayTimings({
   setRepeations,
   firstDay,
   setFirstDay,
+  lastDay,
+  setLastDay,
   viewOnly,
 }) {
   return (
     <>
-      <Container
-        sx={{
-          p: "1rem",
-          display: "flex",
-          justifyContent: "flex-end",
-          alignItems: "center",
-        }}
-      >
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <Container sx={{ p: "0", pr: "1rem", width: "100%" }}>
-            <DatePicker
-              fullWidth
-              sx={{ width: "100%" }}
-              label="Starting Date"
-              value={dayjs(firstDay, "D/M/YYYY")}
-              onChange={(newValue) => {
-                setFirstDay(newValue.format(`D/M/YYYY`));
-              }}
-              disabled={viewOnly}
-            />
-          </Container>
-        </LocalizationProvider>
-        <Button
-          variant="outlined"
-          onClick={() => {
-            setRepeations([...repetations, { time: "00:00" }]);
+      <Box className="scroll-y">
+        <Container
+          sx={{
+            p: "1rem",
+            display: "flex",
+            justifyContent: "flex-end",
+            alignItems: "center",
           }}
-          disabled={viewOnly}
         >
-          Add
-        </Button>
-      </Container>
-      <Divider />
-      {repetations?.map((obj, i) => {
-        return (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              flexDirection: "row",
-            }}
-          >
-            <LocalizationProvider dateAdapter={AdapterDayjs} fullWidth>
-              <Container
-                sx={{ p: "1rem", width: "100%" }}
-                components={["TimePicker"]}
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <Container sx={{ p: "0", pr: "1rem", width: "100%" }}>
+              <DatePicker
                 fullWidth
-              >
-                <TimePicker
-                  fullWidth
-                  sx={{ width: "100%" }}
-                  value={dayjs(obj.time, `H:m`)}
-                  label={`Timing ${i + 1}`}
-                  onChange={(e) => {
-                    setRepeations(
-                      repetations.map((v, idx) => {
-                        if (i === idx) {
-                          return { time: e.format(`H:m`) };
-                        } else {
-                          return v;
-                        }
-                      })
-                    );
-                  }}
-                  disabled={viewOnly}
-                />
-              </Container>
-            </LocalizationProvider>
-
-            <Button
-              sx={{ mr: "1rem" }}
-              onClick={() => {
-                setRepeations(
-                  repetations.filter((val, idx) => {
-                    return i !== idx;
-                  })
-                );
+                sx={{ width: "100%" }}
+                label="Starting Date"
+                value={dayjs(firstDay, "D/M/YYYY")}
+                onChange={(newValue) => {
+                  setFirstDay(newValue.format(`D/M/YYYY`));
+                }}
+                disabled={viewOnly}
+              />
+            </Container>
+            <Container sx={{ p: "0", pr: "1rem", width: "100%" }}>
+              <DatePicker
+                fullWidth
+                sx={{ width: "100%" }}
+                label="End Date"
+                value={dayjs(lastDay, "D/M/YYYY")}
+                onChange={(newValue) => {
+                  setLastDay(newValue.format(`D/M/YYYY`));
+                }}
+                disabled={viewOnly}
+              />
+            </Container>
+          </LocalizationProvider>
+          <Button
+            variant="outlined"
+            onClick={() => {
+              setRepeations([...repetations, { time: "00:00" }]);
+            }}
+            disabled={viewOnly}
+          >
+            Add
+          </Button>
+        </Container>
+        <Divider />
+        {repetations?.map((obj, i) => {
+          return (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexDirection: "row",
               }}
-              disabled={viewOnly}
             >
-              <DeleteRoundedIcon color="primary" />
-            </Button>
-          </Box>
-        );
-      })}
-      <Divider />
+              <LocalizationProvider dateAdapter={AdapterDayjs} fullWidth>
+                <Container
+                  sx={{ p: "1rem", width: "100%" }}
+                  components={["TimePicker"]}
+                  fullWidth
+                >
+                  <TimePicker
+                    fullWidth
+                    sx={{ width: "100%" }}
+                    value={dayjs(obj.time, `H:m`)}
+                    label={`Timing ${i + 1}`}
+                    onChange={(e) => {
+                      setRepeations(
+                        repetations.map((v, idx) => {
+                          if (i === idx) {
+                            return { time: e.format(`H:m`) };
+                          } else {
+                            return v;
+                          }
+                        })
+                      );
+                    }}
+                    disabled={viewOnly}
+                  />
+                </Container>
+              </LocalizationProvider>
+
+              <Button
+                sx={{ mr: "1rem" }}
+                onClick={() => {
+                  setRepeations(
+                    repetations.filter((val, idx) => {
+                      return i !== idx;
+                    })
+                  );
+                }}
+                disabled={viewOnly}
+              >
+                <DeleteRoundedIcon color="primary" />
+              </Button>
+            </Box>
+          );
+        })}
+        <Divider />
+      </Box>
     </>
   );
 }

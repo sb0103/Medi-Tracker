@@ -35,7 +35,7 @@ export default function TrackMedicine({
   medicines,
   fetchTracker,
   fetchAllTracker,
-  formInputTracker,
+  patientsAllTracker,
   getInventory,
   addUpdateTracker,
 }) {
@@ -195,7 +195,7 @@ export default function TrackMedicine({
   const setUp = () => {
     setDaysArr();
 
-    let trackerTable = fetchTracker(formInputTracker, patient._id, month);
+    let trackerTable = fetchTracker(patientsAllTracker, patient._id, month);
 
     setTrackerTable(trackerTable);
     let MT = setMedicineTimings();
@@ -231,7 +231,7 @@ export default function TrackMedicine({
 
   useEffect(() => {
     setUp();
-    console.log(`Month changed to ${month}`);
+    // console.log(`Month changed to ${month}`);
   }, [month]);
 
   useEffect(() => {

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Badge, Typography } from "@mui/material";
 
 import "./tracker-tab.css";
 
@@ -60,7 +59,7 @@ export default function TrackerTab({ medicines, patients, logged }) {
   const [formInputPurchase, setFormInputPurchase] = useState([
     { medicineName: "", doze: "", quantity: 0 },
   ]);
-  const [formInputTracker, setFormInputTracker] = useState([]);
+  const [patientsAllTracker, setPatientsAllTracker] = useState([]);
 
   const [alert, setAlert] = useState({
     isOpen: false,
@@ -77,16 +76,17 @@ export default function TrackerTab({ medicines, patients, logged }) {
       patientID
     );
 
-    setFormInputTracker(tracker);
+    setPatientsAllTracker(tracker);
     return tracker;
   };
 
-  const fetchTracker = (formInputTracker, patientID, month) => {
-    let tracker = formInputTracker.find((t) => {
+  const fetchTracker = (patientsAllTracker, patientID, month) => {
+    let tracker = patientsAllTracker.find((t) => {
       // console.log(t.month);
       return t.month.match(new RegExp(`${month}`, "i")) !== null;
     });
 
+    //If Tracker exists return in the new Format if it doesn't exist return an empty trackerObj
     if (tracker) {
       return {
         _id: patientID,
@@ -138,8 +138,8 @@ export default function TrackerTab({ medicines, patients, logged }) {
         res
       )
     ) {
-      if (formInputTracker.find((t) => t.month == month)) {
-        setFormInputTracker((ts) => {
+      if (patientsAllTracker.find((t) => t.month == month)) {
+        setPatientsAllTracker((ts) => {
           return ts.map((t) => {
             if (t.month === month) {
               return { month, details };
@@ -149,7 +149,7 @@ export default function TrackerTab({ medicines, patients, logged }) {
           });
         });
       } else {
-        setFormInputTracker((ts) => {
+        setPatientsAllTracker((ts) => {
           return [...ts, { month, details }];
         });
       }
@@ -272,7 +272,7 @@ export default function TrackerTab({ medicines, patients, logged }) {
                   medicines={medicines}
                   fetchTracker={fetchTracker}
                   fetchAllTracker={fetchAllTracker}
-                  formInputTracker={formInputTracker}
+                  patientsAllTracker={patientsAllTracker}
                   getInventory={getInventory}
                   addUpdateTracker={addUpdateTracker}
                 />

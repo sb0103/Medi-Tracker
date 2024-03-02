@@ -65,7 +65,7 @@ export default function FormDialog({
         maxWidth="60rem"
       >
         <DialogTitle>{title}</DialogTitle>
-        <DialogContent sx={{ overflow: "hidden" }}>
+        <DialogContent sx={{ overflowY: "scroll" }}>
           <DialogContentText>{content}</DialogContentText>
           {form}
         </DialogContent>
