@@ -28,6 +28,70 @@ const theme = createTheme({
       // dark: will be calculated from palette.secondary.main,
       contrastText: "#ffffff",
     },
+    red: {
+      main: "#c01515",
+    },
+    white: {
+      main: "#ffffff  ",
+    },
+    table: {
+      dark: "#e1e1e1",
+      light: "#ffffff",
+    },
+  },
+});
+
+const theme2 = createTheme({
+  palette: {
+    primary: {
+      main: "#eabfef",
+      light: "#f7e5f8",
+      //  will be calculated from palette.primary.main,
+      dark: "#cc67d9",
+      // will be calculated from palette.primary.main,
+      contrastText: "#ffffff",
+
+      // will be calculated to contrast with palette.primary.main
+    },
+    secondary: {
+      main: "#9d68f2",
+      light: "#d6c0f8",
+      // dark: will be calculated from palette.secondary.main,
+      contrastText: "#ffffff",
+    },
+    red: {
+      main: "#c01515",
+    },
+    white: {
+      main: "#ffffff  ",
+    },
+  },
+});
+
+const darkTheme = createTheme({
+  palette: {
+    primary: {
+      main: "#e268f2",
+      light: "#eb97f6",
+      //  will be calculated from palette.primary.main,
+      dark: "#cd00e4",
+      // will be calculated from palette.primary.main,
+      contrastText: "#ffffff",
+
+      // will be calculated to contrast with palette.primary.main
+    },
+    secondary: {
+      main: "#9d68f2",
+      light: "#d6c0f8",
+      // dark: will be calculated from palette.secondary.main,
+      contrastText: "#ffffff",
+    },
+    red: {
+      main: "#c01515",
+    },
+    white: {
+      main: "#ffffff  ",
+    },
   },
 });
 

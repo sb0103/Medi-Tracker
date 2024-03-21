@@ -329,9 +329,9 @@ function PatientActionBar({
       </Button> */}
 
       <FormDialog
-        btnContent={<DeleteOutlineOutlinedIcon color="error" />}
+        btnContent={<DeleteOutlineOutlinedIcon color="red" />}
         btnVariant="outlined"
-        btnSx={{ color: "secondary" }}
+        btnSx={{ color: "red" }}
         btnClassName="delete-btn"
         title="Delete Patient"
         content=""

@@ -13,6 +13,7 @@ import TrackMedicine from "./TrackMedicine";
 import { postPurchase } from "../NetworkCalls/purchase";
 import { postTracker as pTracker, getTracker } from "../NetworkCalls/tracker";
 import { fetchInventory } from "../NetworkCalls/inventory";
+import { getPurchases } from "../NetworkCalls/purchase";
 
 export default function TrackerTab({ medicines, patients, logged }) {
   const [trackerTable, setTrackerTable] = useState({
@@ -59,6 +60,8 @@ export default function TrackerTab({ medicines, patients, logged }) {
   const [formInputPurchase, setFormInputPurchase] = useState([
     { medicineName: "", doze: "", quantity: 0 },
   ]);
+  const [purchaseDate, setPurchaseDate] = useState(new Date().toUTCString());
+
   const [patientsAllTracker, setPatientsAllTracker] = useState([]);
 
   const [alert, setAlert] = useState({
@@ -156,6 +159,21 @@ export default function TrackerTab({ medicines, patients, logged }) {
     }
   };
 
+  /**
+   *
+   * @param {string} patientID
+   * @returns {Array<{time, purchase:Array< medicine:{_id, medicineName, doze}, quantity >}>}
+   */
+  const getPur = async (patientID) => {
+    return await getPurchases(
+      logged.token,
+      (message, severity) => {
+        setAlert({ isOpen: true, message, severity });
+      },
+      patientID
+    );
+  };
+
   const verifyPurchases = (data) => {
     for (let i = 0; i < data.length; i++) {
       if (data[i].quantity <= 0) {
@@ -166,6 +184,12 @@ export default function TrackerTab({ medicines, patients, logged }) {
     return true;
   };
 
+  /**
+   *
+   * @param {*} patientID
+   * @returns {Array<{medicine, quantity}>} medicine is the medicineID of the medicine,
+   *                                        quantity is the quantity in pillcount
+   */
   const getInventory = async (patientID) => {
     return await fetchInventory(
       logged.token,
@@ -205,9 +229,14 @@ export default function TrackerTab({ medicines, patients, logged }) {
               title="Add Purchase"
               form={
                 <AddPurchase
+                  name={patient.name}
+                  age={patient.age}
+                  bmi={patient.bmi}
                   medicines={medicines}
                   formInput={formInputPurchase}
                   setFormInput={setFormInputPurchase}
+                  purchaseDate={purchaseDate}
+                  setPurchaseDate={setPurchaseDate}
                 />
               }
               onOpen={() => {
@@ -226,7 +255,10 @@ export default function TrackerTab({ medicines, patients, logged }) {
                     );
                   }
 
-                  let body = { time: new Date().toUTCString(), purchase: [] };
+                  let body = {
+                    time: dayjs(purchaseDate, "D/M/YYYY").format(),
+                    purchase: [],
+                  };
 
                   for (let i = 0; i < formInputPurchase.length; i++) {
                     body.purchase.push({
@@ -275,6 +307,7 @@ export default function TrackerTab({ medicines, patients, logged }) {
                   patientsAllTracker={patientsAllTracker}
                   getInventory={getInventory}
                   addUpdateTracker={addUpdateTracker}
+                  getPurchases={getPur}
                 />
               }
               onOpen={async () => {

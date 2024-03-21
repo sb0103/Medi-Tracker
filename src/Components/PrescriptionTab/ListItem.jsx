@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 
-import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
-import EditRoundedIcon from "@mui/icons-material/EditRounded";
-import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
+import UnEditIcon from "@mui/icons-material/EditOffOutlined";
+import EditIcon from "@mui/icons-material/ModeEditOutlineOutlined";
+import DeleteIcon from "@mui/icons-material/DeleteOutlineOutlined";
+
+import dayjs from "dayjs";
 
 import {
   Typography,
@@ -11,6 +13,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Divider,
 } from "@mui/material";
 import FormDialog from "../FormDialog/FormDialog";
 
@@ -26,6 +29,7 @@ export default function ListItem({
 }) {
   const [editState, setEditState] = useState(false);
   const [listVal, setListVal] = useState([]);
+  const [tempTime, setTempTime] = useState({});
 
   useEffect(() => {
     if (
@@ -66,6 +70,7 @@ export default function ListItem({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            flexDirection: "column",
           }}
         >
           <FormDialog
@@ -75,6 +80,9 @@ export default function ListItem({
             title={"View Timings"}
             content=""
             form={
+              /**
+               * times = {repetations, firstDay, lastDay, day, date}
+               */
               <SelectTimings
                 times={listItem.times}
                 setTimes={(times) => {
@@ -85,25 +93,47 @@ export default function ListItem({
             }
             removeCancel
           />
+          <Divider />
+          <Typography sx={{ fontSize: "0.5rem", color: "#909090" }}>
+            From:{" "}
+            {listItem.times?.firstDay === undefined
+              ? ""
+              : dayjs(listItem.times?.firstDay, "D/M/YYYY").format(
+                  "DD/MMM/YYYY"
+                )}
+            <br />
+            To:{" "}
+            {listItem.times?.lastDay === undefined
+              ? ""
+              : dayjs(listItem.times?.lastDay, "D/M/YYYY").format(
+                  "DD/MMM/YYYY"
+                )}
+            <br />
+            {listItem.times?.format === undefined
+              ? ""
+              : listItem.times?.format.toLocaleUpperCase()}
+          </Typography>
         </div>
 
         {viewOnly === false ? (
           <div className="pres-btn-bar">
             <Button
+              color="red"
               variant="text"
               onClick={() => {
                 removeListItem();
               }}
             >
-              <DeleteRoundedIcon color="primary" />
+              <DeleteIcon color="red" />
             </Button>
             <Button
+              color="secondary"
               variant="text"
               onClick={() => {
                 setEditState(true);
               }}
             >
-              <EditRoundedIcon color="primary" />
+              <EditIcon color="secondary" />
             </Button>
           </div>
         ) : (
@@ -214,6 +244,7 @@ export default function ListItem({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            flexDirection: "column",
           }}
         >
           <FormDialog
@@ -230,19 +261,52 @@ export default function ListItem({
                 viewOnly={viewOnly}
               />
             }
-            removeCancel
+            // Added cancel btn alongs with its functionality
+            onOpen={() => {
+              setTempTime(listItem.times);
+            }}
+            onClose={(success) => {
+              if (!success) {
+                let fn = (times) => {
+                  setListItem({ ...listItem, times }, i);
+                };
+
+                fn(tempTime);
+              }
+            }}
           />
+          <Typography sx={{ fontSize: "0.5rem", color: "#909090" }}>
+            From:{" "}
+            {listItem.times?.firstDay === undefined
+              ? ""
+              : dayjs(listItem.times?.firstDay, "D/M/YYYY").format(
+                  "DD/MMM/YYYY"
+                )}
+            <br />
+            To:{" "}
+            {listItem.times?.lastDay === undefined
+              ? ""
+              : dayjs(listItem.times?.lastDay, "D/M/YYYY").format(
+                  "DD/MMM/YYYY"
+                )}
+            <br />
+            {listItem.times?.format === undefined
+              ? ""
+              : listItem.times?.format.toLocaleUpperCase()}
+          </Typography>
         </div>
         <div className="pres-btn-bar">
           <Button
+            color="red"
             variant="text"
             onClick={() => {
               removeListItem();
             }}
           >
-            <DeleteRoundedIcon color="primary" />
+            <DeleteIcon color="red" />
           </Button>
           <Button
+            color="secondary"
             variant="text"
             onClick={() => {
               let _id = medicines.find((med) => {
@@ -255,7 +319,7 @@ export default function ListItem({
               setEditState(false);
             }}
           >
-            <SaveRoundedIcon color="primary" />
+            <UnEditIcon color="secondary" />
           </Button>
         </div>
       </div>

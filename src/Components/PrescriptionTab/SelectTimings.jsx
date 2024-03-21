@@ -14,7 +14,7 @@ import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 
-import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
+import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 
 import dayjs from "dayjs";
 
@@ -30,7 +30,12 @@ export default function SelectTimings({ times, setTimes, viewOnly = false }) {
             value={times.format}
             label="Format"
             onChange={(e) => {
-              if (!viewOnly) setTimes({ ...times, format: e.target.value });
+              if (!viewOnly)
+                setTimes({
+                  firstDay: times.firstDay,
+                  lastDay: times.lastDay,
+                  format: e.target.value,
+                });
             }}
             disabled={viewOnly}
           >
@@ -135,6 +140,7 @@ function SelectDailyTimings({
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <Container sx={{ p: "0", pr: "1rem", width: "100%" }}>
             <DatePicker
+              format="DD/MMM/YYYY"
               fullWidth
               sx={{ width: "100%" }}
               label="Starting Date"
@@ -147,6 +153,7 @@ function SelectDailyTimings({
           </Container>
           <Container sx={{ p: "0", pr: "1rem", width: "100%" }}>
             <DatePicker
+              format="DD/MMM/YYYY"
               fullWidth
               sx={{ width: "100%" }}
               label="End Date"
@@ -158,18 +165,22 @@ function SelectDailyTimings({
             />
           </Container>
         </LocalizationProvider>
-
-        <Button
-          variant="outlined"
-          onClick={() => {
-            setRepeations([...repetations, { time: "00:00" }]);
-          }}
-          disabled={viewOnly}
-        >
-          Add
-        </Button>
       </Container>
-      <Divider />
+
+      <Divider sx={{ my: "0.8rem" }} />
+
+      <Button
+        sx={{ my: "0.5rem" }}
+        variant="outlined"
+        onClick={() => {
+          setRepeations([...repetations, { time: "00:00" }]);
+        }}
+        disabled={viewOnly}
+      >
+        Add Time
+      </Button>
+
+      <Divider sx={{ my: "0.8rem" }} />
       <Box className="scroll-y">
         {repetations?.map((obj, i) => {
           return (
@@ -219,7 +230,7 @@ function SelectDailyTimings({
                 }}
                 disabled={viewOnly}
               >
-                <DeleteRoundedIcon color="primary" />
+                <DeleteOutlineOutlinedIcon color="red" />
               </Button>
             </Box>
           );
@@ -361,7 +372,7 @@ function SelectWeeklyTimings({
                   }}
                   disabled={viewOnly}
                 >
-                  <DeleteRoundedIcon color="primary" />
+                  <DeleteOutlineOutlinedIcon color="red" />
                 </Button>
               </Box>
             </>
@@ -507,7 +518,7 @@ function SelectMonthlyTimings({
                   }}
                   disabled={viewOnly}
                 >
-                  <DeleteRoundedIcon color="primary" />
+                  <DeleteOutlineOutlinedIcon color="red" />
                 </Button>
               </Box>
             </>
@@ -624,7 +635,7 @@ function SelectAlternateDayTimings({
                 }}
                 disabled={viewOnly}
               >
-                <DeleteRoundedIcon color="primary" />
+                <DeleteOutlineOutlinedIcon color="red" />
               </Button>
             </Box>
           );

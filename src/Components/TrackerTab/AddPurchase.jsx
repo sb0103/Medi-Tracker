@@ -1,4 +1,10 @@
-import { Button } from "@mui/material";
+import { Button, Divider, Container } from "@mui/material";
+
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+
+import dayjs from "dayjs";
 
 import ListItem from "./ListItem";
 
@@ -9,6 +15,8 @@ export default function AddPurchase({
   medicines,
   formInput,
   setFormInput,
+  purchaseDate,
+  setPurchaseDate,
 }) {
   return (
     <div style={{ width: "55rem", maxWidth: "90vw" }}>
@@ -27,8 +35,10 @@ export default function AddPurchase({
             {bmi}
           </div>
         </div>
+
+        <Divider />
         <Button
-          sx={{ px: "1rem", width: "7rem" }}
+          sx={{ px: "1rem", width: "12rem" }}
           variant="outlined"
           onClick={() => {
             setFormInput((prevState) => [
@@ -37,9 +47,28 @@ export default function AddPurchase({
             ]);
           }}
         >
-          Add
+          Add Medicine
         </Button>
       </div>
+
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <Container
+          sx={{ p: "0", pr: "1rem", width: "40%", m: "auto", my: "1rem" }}
+        >
+          <DatePicker
+            format="DD/MMM/YYYY"
+            fullWidth
+            sx={{ width: "100%" }}
+            label="Purchase Date"
+            value={dayjs(purchaseDate, "D/M/YYYY")}
+            onChange={(newValue) => {
+              setPurchaseDate(newValue.format(`D/M/YYYY`));
+            }}
+            defaultVaue={dayjs()}
+          />
+        </Container>
+      </LocalizationProvider>
+
       <div className="medicines">
         {formInput.map((listItem, i) => {
           return (

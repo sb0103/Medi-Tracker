@@ -27,6 +27,7 @@ export default function FormDialog({
   btnContent,
   btnVariant,
   btnSx = {},
+  btnProps = {},
   btnClassName = "",
   title,
   content,
@@ -54,6 +55,7 @@ export default function FormDialog({
         variant={btnVariant}
         sx={btnSx}
         onClick={handleClickOpen}
+        {...btnProps}
       >
         {btnContent}
       </Button>

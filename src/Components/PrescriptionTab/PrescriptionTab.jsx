@@ -13,6 +13,7 @@ import ViewPrescription from "./ViewPrescription";
 import { setPrescription as putPrescription } from "../NetworkCalls/prescription";
 import { clearTracker } from "../NetworkCalls/tracker";
 import { Typography } from "@mui/material";
+import dayjs from "dayjs";
 
 export default function PrescriptionTab({
   medicines,
@@ -27,7 +28,57 @@ export default function PrescriptionTab({
   });
 
   const [dialogBox, setDialogBox] = useState(false);
+  //TrackerInfo
   const [toClearPatientID, setToClearPatientID] = useState("");
+
+  const [tempPres, setTempPres] = useState({});
+
+  const verifyPrescription = (presc) => {
+    let res = true;
+
+    presc.forEach((med) => {
+      let firstDay = med?.times?.firstDay;
+      let lastDay = med?.times?.lastDay;
+
+      if (!firstDay || !lastDay) {
+        setAlert({
+          isOpen: true,
+          message: `No value for "Start Date" or "End Date" provided`,
+          severity: "error",
+        });
+
+        res = false;
+      }
+
+      firstDay = dayjs(firstDay, "D/M/YYYY");
+      lastDay = dayjs(lastDay, "D/M/YYYY");
+      // console.log(firstDay);
+      // console.log(lastDay);
+      if (lastDay.isBefore(firstDay, "d")) {
+        setAlert({
+          isOpen: true,
+          message: `Invalid value for "Start Date" or "End Date" provided`,
+          severity: "error",
+        });
+
+        res = false;
+      }
+
+      let repetations = med?.times?.repetations;
+
+      if (repetations.length === 0) {
+        setAlert({
+          isOpen: true,
+          message: `No timings provided for the medicine`,
+          severity: "error",
+        });
+
+        res = false;
+      }
+    });
+
+    return res;
+  };
 
   return (
     <>
@@ -104,36 +155,59 @@ export default function PrescriptionTab({
                   }}
                 />
               }
-              onClose={async () => {
-                let map = new Map();
-                for (let i = 0; i < medicines.length; i++) {
-                  map.set(
-                    `${medicines[i].medicineName} ${medicines[i].doze}`,
-                    medicines[i]._id
-                  );
-                }
+              onClose={async (success) => {
+                if (success && verifyPrescription(val.prescription)) {
+                  let map = new Map();
+                  for (let i = 0; i < medicines.length; i++) {
+                    map.set(
+                      `${medicines[i].medicineName} ${medicines[i].doze}`,
+                      medicines[i]._id
+                    );
+                  }
 
-                let presc = val.prescription.map((p, i) => {
-                  return {
-                    medID: map.get(`${p.medicineName} ${p.doze}`),
-                    times: p.times,
+                  let presc = val.prescription.map((p, i) => {
+                    return {
+                      medID: map.get(`${p.medicineName} ${p.doze}`),
+                      times: p.times,
+                    };
+                  });
+                  if (
+                    await putPrescription(
+                      logged.token,
+                      (message, severity) => {
+                        setAlert({ isOpen: true, message, severity });
+                      },
+                      val._id,
+                      presc
+                    )
+                  ) {
+                    setToClearPatientID(val._id);
+                    setDialogBox(true);
+                  }
+                } else {
+                  let fn = (prescription) => {
+                    if (
+                      prescription.medicineName !== "" &&
+                      prescription.doze !== ""
+                    )
+                      setPatients((prevPres) => {
+                        return prevPres.map((p) => {
+                          if (p._id === val._id) {
+                            return {
+                              ...p,
+                              prescription,
+                            };
+                          } else return p;
+                        });
+                      });
                   };
-                });
-                if (
-                  await putPrescription(
-                    logged.token,
-                    (message, severity) => {
-                      setAlert({ isOpen: true, message, severity });
-                    },
-                    val._id,
-                    presc
-                  )
-                ) {
-                  setToClearPatientID(val._id);
-                  setDialogBox(true);
+
+                  fn(tempPres);
                 }
               }}
-              removeCancel
+              onOpen={() => {
+                setTempPres(val.prescription);
+              }}
             />
           </>,
           <FormDialog

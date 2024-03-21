@@ -14,29 +14,29 @@ export default function Login({ setAlert, logged, setLogged, setUserDetails }) {
   let history = useHistory();
 
   useEffect(() => {
-    if (logged.isLogged === true) {
-      history.push("/app");
-      setAlert({
-        isOpen: true,
-        message:
-          "Already Logged In, Logout to LoginRegister with another email and password",
-        severity: "info",
-      });
-    }
+    // if (logged.isLogged === true) {
+    //   history.push("/app");
+    //   setAlert({
+    //     isOpen: true,
+    //     message:
+    //       "Already Logged In, Logout to LoginRegister with another email and password",
+    //     severity: "info",
+    //   });
+    // }
 
-    let data = localStorage.getItem("loginData");
+    let data = JSON.parse(localStorage.getItem("loginData"));
 
     if (data && dayjs(data.expiry).isAfter(dayjs())) {
-      let { username, email, token } = JSON.parse(data);
+      let { username, email, token } = data;
 
       setUserDetails({ username, email });
       setLogged({ isLogged: true, token: token });
-
-      history.push("/app");
     }
   }, []);
 
-  useEffect(() => {}, [logged]);
+  useEffect(() => {
+    if (logged.isLogged === true) history.push("/app");
+  }, [logged]);
 
   const verifyLoginForm = (form) => {
     let { password, email } = form;

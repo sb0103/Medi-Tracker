@@ -57,17 +57,19 @@ export default function Register({
       });
     }
 
-    let data = localStorage.getItem("loginData");
+    let data = JSON.parse(localStorage.getItem("loginData"));
 
     if (data && dayjs(data.expiry).isAfter(dayjs())) {
-      let { username, email, token } = JSON.parse(data);
+      let { username, email, token } = data;
 
       setUserDetails({ username, email });
       setLogged({ isLogged: true, token: token });
-
-      history.push("/app");
     }
   }, []);
+
+  useEffect(() => {
+    history.push("/app");
+  }, [logged]);
 
   return (
     <Box

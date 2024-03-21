@@ -38,12 +38,13 @@ export default function TrackMedicine({
   patientsAllTracker,
   getInventory,
   addUpdateTracker,
+  getPurchases,
 }) {
   const [availableMonths, setAvailableMonths] = useState([
     "January 2024",
     "December 2023",
   ]);
-
+  const [allowMonthsAhead, setAllowMonthsAhead] = useState(6);
   const [diaBoxOpen, setDiaBoxOpen] = useState(false);
   const [newMonth, setNewMonth] = useState("");
 
@@ -55,6 +56,7 @@ export default function TrackMedicine({
      */
   const [MedTimings, setMedTimings] = useState([[]]);
   const [checkboxValue, setCheckBoxValue] = useState([[]]);
+  const [checkboxProps, setCheckboxProps] = useState([]);
   const [medAlertPills, setMedAlertPills] = useState([]);
 
   const [daysInMonth, setDaysInMonth] = useState([]);
@@ -106,6 +108,35 @@ export default function TrackMedicine({
     });
     setMedTimings(res);
     return res;
+  }
+
+  function setMedicineTimingsAllMonths() {
+    let allMonthRes = [];
+    availableMonths.forEach((month) => {
+      let [m, y] = month.split(" ");
+
+      /**
+       * Array<{medicineName, doze, times:[[DateObj]]}
+       */
+      let MT = MedicineTimings(patient, m, y);
+      // console.log(`Value of MT = `);
+      // console.log(MT);
+      let res = [];
+      MT.forEach((med) => {
+        let arr = [
+          { medicineName: med.medicineName, medID: med.medID, doze: med.doze },
+        ];
+
+        for (let i = 0; i < med.times.length; i++) {
+          arr.push(med.times[i]);
+        }
+
+        res.push(arr);
+      });
+      allMonthRes.push({ month, MedicineTimings: res });
+    });
+
+    return allMonthRes;
   }
 
   function setCheckBoxValueFn(MedTimings, trackerTable) {
@@ -192,7 +223,332 @@ export default function TrackMedicine({
     return res;
   }
 
-  const setUp = () => {
+  const setUp2 = async (availableMonths) => {
+    /**
+     * @returns {[dayjs, dayjs]} [firstDay, lastDay]
+     */
+    const getFirstNLastDay = (medID) => {
+      let presc = patient.prescription.find((v) => v.medID === medID);
+
+      if (!presc) {
+        throw new Error(`prescription of the medID=${medID} not found`);
+      }
+
+      return [
+        dayjs(presc.times.firstDay, "D/M/YYYY"),
+        dayjs(presc.times.lastDay, "D/M/YYYY"),
+      ];
+    };
+
+    /**
+     *
+     * @param { Array } purchases
+     * @param { number } purchaseIdx
+     * @param { string } medID
+     * @returns { Array(2) } [time:dayjs, qty]
+     */
+    function nextPurchase(purchases, purchaseIdx, medID) {
+      while (purchaseIdx.i < purchases.length) {
+        let purArr = purchases[purchaseIdx.i];
+        console.log(purArr);
+        let purObj = purArr.purchase.find((v) => v.medicine._id === medID);
+
+        if (purObj !== undefined) {
+          return [dayjs(purArr.time), purObj.quantity];
+        } else {
+          purchaseIdx.i++;
+          continue;
+        }
+      }
+      return null;
+    }
+
+    /**
+     * @description changes the props to disabled timeFrom included( checks by minute ) to timeTo(check by Day) excluded
+     *
+     * @param {dayjs} timeFrom
+     * @param {dayjs} timeTo
+     * @param {string} medID
+     * @param {*} checkboxProps
+     * @returns
+     */
+    function markAsDisabled(timeFrom, timeTo, medID, checkboxProps) {
+      let month = timeFrom.format("MMMM YYYY");
+      let lastmonthIdx = 0;
+
+      let allMarked = false;
+
+      let monthObj = checkboxProps.find((obj, idx1) => {
+        if (obj.month === month) {
+          lastmonthIdx = idx1;
+          return true;
+        }
+        return false;
+      });
+      if (!monthObj) {
+        return null;
+      }
+      while (true) {
+        let ts = monthObj.ckBxProps.find((v) => v.medID === medID);
+        if (!ts) {
+          return null;
+        }
+
+        ts = ts.times;
+
+        for (let i = 0; i < ts.length; i++) {
+          if (allMarked) break;
+          for (let j = 0; j < ts[i].length; j++) {
+            if (ts[i][j].date.isAfter(timeTo, "D")) {
+              allMarked = true;
+              break;
+            } else if (
+              ts[i][j].date.isAfter(timeFrom, "m") ||
+              ts[i][j].date.isSame(timeFrom, "m")
+            ) {
+              ts[i][j].disabled = true;
+            } else {
+              continue;
+            }
+          }
+        }
+
+        if (allMarked) break;
+        lastmonthIdx++;
+        monthObj = checkboxProps[lastmonthIdx];
+        if (!monthObj) {
+          return null;
+        }
+      }
+      return true;
+    }
+
+    /**
+     *
+     * @param {*} MT_ALL_MONTHS
+     * @returns {Array<medID>}
+     */
+    function getAllMedID(MT_ALL_MONTHS) {
+      // let medIdSet = new Set();
+
+      // for(let i=0;i<MT_ALL_MONTHS.length;i++){
+      //   for(let j=0;j<MT_ALL_MONTHS[i].medicineTimings.length;j++){
+      //     if(!medIdSet.has(MT_ALL_MONTHS[i].medicineTimings[j].medID)){
+
+      //       medIdSet.add( MT_ALL_MONTHS[i].medicineTimings[j].medID );
+
+      //     }
+      //   }
+      // }
+
+      // return Array.from(medIdSet);
+
+      let pres = patient.prescription;
+
+      let medIDArr = [];
+
+      pres.forEach((val) => {
+        medIDArr.push(val.medID);
+      });
+
+      return medIDArr;
+    }
+
+    /**
+     *
+     * @param {*} checkboxProps
+     * @param {*} timeFrom
+     * @param {*} LDMA
+     * @param {*} quantity_of_purchase
+     * @returns { number } quanity of available medicine
+     */
+    function updateCheckboxProps(
+      checkboxProps,
+      medID,
+      timeFrom,
+      LDMA,
+      quantity_of_purchase,
+      lastDay
+    ) {
+      let mon = timeFrom.format("MMMM YYYY");
+
+      while (true) {
+        let a = checkboxProps.find((val) => val.month === mon);
+        if (a === undefined) {
+          return null;
+        }
+        let b = a.ckBxProps.find((v) => v.medID === medID);
+        if (b === undefined) {
+          return null;
+        }
+        let ts = b.times;
+        let inventory_depleted = false;
+        let iter_completed = false;
+        for (let i = timeFrom.date() - 1; i < ts.length; i++) {
+          if (inventory_depleted || iter_completed) break;
+          for (let j = 0; j < ts[i].length; j++) {
+            if (ts[i][j].date.isBefore(timeFrom, "minute")) {
+              continue;
+            }
+            if (
+              lastDay.isBefore(dayjs(`${i + 1} ${mon}`, "D MMMM YYYY"), "D")
+            ) {
+              iter_completed = true;
+              LDMA.completed = true;
+              break;
+            }
+
+            if (quantity_of_purchase <= 0) {
+              inventory_depleted = true;
+              LDMA.time = ts[i][j].date;
+              break;
+            }
+            quantity_of_purchase--;
+          }
+        }
+        if (inventory_depleted) {
+          return 0;
+        } else if (iter_completed) {
+          return quantity_of_purchase;
+        } else {
+          mon = timeFrom.add(1, "month").format("MMMM YYYY");
+        }
+      }
+    }
+
+    let purchases = await getPurchases(patient._id);
+    console.log(`Purchases length: ${purchases.length}`);
+
+    purchases.sort((a, b) => {
+      if (dayjs(a.time).isBefore(dayjs(b.time))) {
+        return -1;
+      } else if (dayjs(a.time).isAfter(dayjs(b.time))) {
+        return 1;
+      } else {
+        return 0;
+      }
+    });
+    let MT_ALL_MONTHS = [];
+
+    let checkboxProps = [];
+
+    // creating an empty dataStructure __> checkboxProps
+    /**
+     * [
+     *  {
+     *    month,
+     *    ckBxProps: [
+     *      medID:"objectID"
+     *      times:[[{date, description, noMedicineFlag, disabled }],[],[]]
+     *    ]
+     *  }
+     * ]
+     */
+
+    availableMonths.forEach((month) => {
+      let [m, y] = month.split(" ");
+      let MT = MedicineTimings(patient, m, y);
+      MT_ALL_MONTHS.push({ month, medicineTimings: MT });
+      let checkboxPropsInner = [];
+      MT.forEach((v) => {
+        let ckbkval = { medID: v.medID };
+        let ts = v.times;
+
+        let tsNew = [];
+        for (let i = 0; i < ts.length; i++) {
+          let innerTs = [];
+          for (let j = 0; j < ts[i].length; j++) {
+            innerTs.push({ date: ts[i][j] });
+          }
+          tsNew.push(innerTs);
+        }
+
+        ckbkval.times = tsNew;
+        checkboxPropsInner.push(ckbkval);
+      });
+      checkboxProps.push({ month, ckBxProps: checkboxPropsInner });
+    });
+
+    //Reversing the arrays of MTs to get chronological order of MT in earliest --> latest
+    MT_ALL_MONTHS.reverse();
+
+    /**
+     * [
+     *    {
+     *      time:dayjs,
+     *      medID
+     *    }
+     * ]
+     */
+
+    let purchaseIdx = { i: 0 },
+      date_of_purchase;
+
+    let medIDArr = getAllMedID(MT_ALL_MONTHS);
+    for (let i = 0; i < medIDArr.length; i++) {
+      let medID = medIDArr[i];
+      purchaseIdx = { i: 0 };
+      let [firstDay, lastDay] = getFirstNLastDay(medID);
+      let currDay = firstDay;
+      let quantity_of_purchase;
+      /**
+       * {time:dayjs}
+       */
+      let LDMA = {};
+
+      //PURCHASE LOOP
+      while (true) {
+        debugger;
+        let nxPur = nextPurchase(purchases, purchaseIdx, medID);
+        purchaseIdx.i++;
+        if (nxPur !== null) {
+          [date_of_purchase, quantity_of_purchase] = nxPur;
+
+          if (!!LDMA?.time) {
+            if (date_of_purchase.isAfter(LDMA.time, "D")) {
+              markAsDisabled(LDMA.time, date_of_purchase, medID, checkboxProps);
+              currDay = date_of_purchase.hour(0).minute(0);
+            } else {
+              currDay = LDMA.time;
+            }
+          } else {
+            if (date_of_purchase.isAfter(firstDay, "D")) {
+              markAsDisabled(firstDay, date_of_purchase, medID, checkboxProps);
+              currDay = date_of_purchase;
+            } else {
+              currDay = firstDay;
+            }
+          }
+        } else {
+          if (LDMA?.time) {
+            markAsDisabled(
+              LDMA.time,
+              lastDay.add(1, "D"),
+              medID,
+              checkboxProps
+            );
+          } else if (LDMA?.completed === undefined) {
+            let endDate = lastDay.add(1, "D");
+            markAsDisabled(firstDay, endDate, medID, checkboxProps);
+          }
+          break;
+        }
+
+        let q_left = updateCheckboxProps(
+          checkboxProps,
+          medID,
+          currDay,
+          LDMA,
+          quantity_of_purchase,
+          lastDay
+        );
+      }
+    }
+    setCheckboxProps(checkboxProps);
+    console.log(checkboxProps);
+  };
+
+  const setUp = async () => {
     setDaysArr();
 
     let trackerTable = fetchTracker(patientsAllTracker, patient._id, month);
@@ -214,10 +570,10 @@ export default function TrackMedicine({
     }
   };
 
-  useEffect(() => {
+  const fn_setAvailableMonth = () => {
     let AMs = [];
 
-    let d = dayjs();
+    let d = dayjs().add(allowMonthsAhead, "M");
     while (
       d.isAfter(dayjs(TRACKER_START_MONTH, `MMMM YYYY`), "month") ||
       d.isSame(dayjs(TRACKER_START_MONTH, `MMMM YYYY`), "month")
@@ -227,7 +583,17 @@ export default function TrackMedicine({
     }
 
     setAvailableMonths(AMs);
+    return AMs;
+  };
+
+  useEffect(() => {
+    let AMs = fn_setAvailableMonth();
+    // setUp2(AMs);
   }, []);
+
+  useEffect(() => {
+    fn_setAvailableMonth();
+  }, [allowMonthsAhead]);
 
   useEffect(() => {
     setUp();

@@ -7,7 +7,7 @@ import dayjs from "dayjs";
  *                  month e.g "January"
  * @param {Number} year
  *                  e.g "2023"
- * @returns {Array<{medID,medicineName, doze, times:[[[Dayjs]]]}>}
+ * @returns {Array<{medID,medicineName, doze, times:[[dayjs]]}>}
  */
 
 function MedicineTimings(patient, month, year) {
@@ -32,6 +32,7 @@ function MedicineTimings(patient, month, year) {
             dayjs(fd, "D/M/YYYY")
           )
         ) {
+          times.push([]);
           continue;
         }
 
@@ -40,7 +41,8 @@ function MedicineTimings(patient, month, year) {
             dayjs(ld, "D/M/YYYY")
           )
         ) {
-          break;
+          times.push([]);
+          continue;
         }
 
         timingsEachDay.forEach((val) => {

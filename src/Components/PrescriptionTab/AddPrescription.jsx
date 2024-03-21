@@ -33,7 +33,7 @@ export default function AddPrescription({
           </div>
         </div>
         <Button
-          sx={{ px: "1rem", width: "7rem" }}
+          sx={{ px: "1rem", width: "12rem" }}
           variant="outlined"
           onClick={() => {
             setPrescription([
@@ -46,7 +46,7 @@ export default function AddPrescription({
             ]);
           }}
         >
-          ADD
+          Add
         </Button>
       </div>
       <Divider />

@@ -9,6 +9,7 @@ import {
   Box,
 } from "@mui/material";
 import ModeEditOutlineOutlinedIcon from "@mui/icons-material/ModeEditOutlineOutlined";
+import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 
 import BasicTable from "../BasicTable/BasicTable";
 import FormDialog from "../FormDialog/FormDialog";
@@ -17,7 +18,6 @@ import { addMedicine, modifyMedicine } from "../NetworkCalls/medicines";
 
 import "./medicineTab.css";
 import { useState } from "react";
-import { Palette } from "@mui/icons-material";
 
 export default function MedicineTab({ medicines, setMedicines, logged }) {
   const [formInput, setFormInput] = useState([
@@ -36,6 +36,19 @@ export default function MedicineTab({ medicines, setMedicines, logged }) {
         return false;
       }
     }
+    //Verification for if same medName+doze already exists
+    let meds = new Set();
+
+    for (let j = 0; j < medicines.length; j++) {
+      meds.add(`${medicines[j].medicineName} ${medicines[j].doze}`);
+    }
+
+    for (let i = 0; i < formData.length; i++) {
+      if (meds.has(`${formData[i].medicineName} ${formData[i].doze}`)) {
+        return false;
+      }
+    }
+
     return true;
   };
 
@@ -62,9 +75,10 @@ export default function MedicineTab({ medicines, setMedicines, logged }) {
             <AddMedicine formInput={formInput} setFormInput={setFormInput} />
           }
           onClose={async (success) => {
+            let failedIdx = [];
+
             if (success && verifyMedicineData(formInput)) {
               let medArr = formInput;
-
               for (let i = 0; i < formInput.length; i++) {
                 let medID = await addMedicine(
                   logged.token,
@@ -73,66 +87,27 @@ export default function MedicineTab({ medicines, setMedicines, logged }) {
                   },
                   medArr[i]
                 );
-
-                medArr[i]._id = medID;
+                if (medID !== false) {
+                  medArr[i]._id = medID;
+                } else {
+                  failedIdx.push(i);
+                }
               }
-
+              medArr = medArr.filter(
+                (value, idx) => failedIdx.findIndex((i) => i === idx) === -1
+              );
               setMedicines((medicines) => [...medicines, ...medArr]);
             } else if (success) {
               setAlert({
                 isOpen: true,
-                message: "Invalid Medicine name or Doze",
+                message:
+                  "Verification for the medicines has failed.\n Kindly check if the medicine doesn't already exists, and medicine name and doze  has atleast 3 letter/number.",
                 severity: "error",
               });
             }
           }}
           onOpen={() => {
             setFormInput([{ medicineName: "", doze: "" }]);
-          }}
-        />
-        <FormDialog
-          btnContent={"Add Doze"}
-          btnVariant={"outlined"}
-          btnSx={{ mr: "1rem" }}
-          title={"Add Doze"}
-          content={""}
-          form={
-            <AddDoze
-              medicines={medicines.map((val) => val.medicineName)}
-              formInput={formInput2}
-              setFormInput={setFormInput2}
-            />
-          }
-          onClose={async (success) => {
-            if (
-              success &&
-              formInput2.medicineName.length >= 3 &&
-              formInput2.doze.length >= 3
-            ) {
-              setMedicines((meds) => [...meds, formInput2]);
-              setAlert({
-                isOpen: true,
-                message: "Doze successfully Added",
-                severity: "success",
-              });
-
-              await addMedicine(
-                logged.token,
-                (message, severity) => {
-                  setAlert({ isOpen: true, message, severity });
-                },
-                formInput2
-              );
-            } else if (success) {
-              setAlert({
-                isOpen: true,
-                message: "Invalid Doze",
-                severity: "error",
-              });
-            }
-          }}
-          onOpen={() => {
-            setFormInput2({ medicineName: "", doze: "" });
           }}
         />
       </div>
@@ -258,6 +233,14 @@ function AddMedicine({ formInput, setFormInput }) {
                   });
                 }}
               />
+
+              <Button
+                onClick={() => {
+                  setFormInput(formInput.filter((v, idx) => i !== idx));
+                }}
+              >
+                <DeleteOutlineOutlinedIcon color="red" />
+              </Button>
             </Stack>
           );
         })}
@@ -384,7 +367,7 @@ function MedicineActionBar({ medicines, _id, setMedicines, logged, setAlert }) {
     <FormDialog
       btnContent={<ModeEditOutlineOutlinedIcon color="secondary" />}
       btnVariant="outlined"
-      btnSx={{ color: "secondary" }}
+      btnProps={{ color: "secondary" }}
       btnClassName="edit-btn"
       title="Edit Medicine Details"
       content=""

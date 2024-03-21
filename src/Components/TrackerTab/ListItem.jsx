@@ -10,9 +10,9 @@ import {
   TextField,
 } from "@mui/material";
 
-import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
-import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
-import EditRoundedIcon from "@mui/icons-material/EditRounded";
+import UnEditIcon from "@mui/icons-material/EditOffOutlined";
+import EditIcon from "@mui/icons-material/ModeEditOutlineOutlined";
+import DeleteIcon from "@mui/icons-material/DeleteOutlineOutlined";
 
 export default function ListItem({
   medicines = [],
@@ -68,18 +68,20 @@ export default function ListItem({
         {viewOnly === false ? (
           <div className="pres-btn-bar">
             <Button
+              color="red"
               onClick={() => {
                 removeListItem();
               }}
             >
-              <DeleteRoundedIcon color="primary" />
+              <DeleteIcon color="red" />
             </Button>
             <Button
+              color="secondary"
               onClick={() => {
                 setEditState(true);
               }}
             >
-              <EditRoundedIcon color="primary" />
+              <EditIcon color="secondary" />
             </Button>
           </div>
         ) : (
@@ -186,19 +188,21 @@ export default function ListItem({
         </div>
         <div className="pres-btn-bar">
           <Button
+            color="red"
             onClick={() => {
               removeListItem();
             }}
           >
-            <DeleteRoundedIcon color="primary" />
+            <DeleteIcon color="red" />
           </Button>
           <Button
+            color="secondary"
             onClick={() => {
               setListItem(listVal);
               setEditState(false);
             }}
           >
-            <SaveRoundedIcon color="primary" />
+            <UnEditIcon color="secondary" />
           </Button>
         </div>
       </div>

@@ -21,7 +21,7 @@ export async function addMedicine(token, setAlert, body) {
     let res = await axios.post(`${BE_URL}/medicines/add`, body, {
       headers: { Authorization: `Bearer ${token}` },
     });
-
+    setAlert("Medicine Added Successfully", "success");
     return res.data.medID;
   } catch (err) {
     if (err.response) {
@@ -29,6 +29,7 @@ export async function addMedicine(token, setAlert, body) {
     } else {
       setAlert(err.message, "error");
     }
+    return false;
   }
 }
 
