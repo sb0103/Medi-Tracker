@@ -56,7 +56,9 @@ export default function TrackMedicine({
      */
   const [MedTimings, setMedTimings] = useState([[]]);
   const [checkboxValue, setCheckBoxValue] = useState([[]]);
+
   const [checkboxProps, setCheckboxProps] = useState([]);
+  const [checkboxPropsMonth, setCheckboxPropsMonth] = useState([[]]);
   const [medAlertPills, setMedAlertPills] = useState([]);
 
   const [daysInMonth, setDaysInMonth] = useState([]);
@@ -92,8 +94,6 @@ export default function TrackMedicine({
      * Array<{medicineName, doze, times:[[DateObj]]}
      */
     let MT = MedicineTimings(patient, m, y);
-    // console.log(`Value of MT = `);
-    // console.log(MT);
     let res = [];
     MT.forEach((med) => {
       let arr = [
@@ -119,8 +119,6 @@ export default function TrackMedicine({
        * Array<{medicineName, doze, times:[[DateObj]]}
        */
       let MT = MedicineTimings(patient, m, y);
-      // console.log(`Value of MT = `);
-      // console.log(MT);
       let res = [];
       MT.forEach((med) => {
         let arr = [
@@ -166,15 +164,12 @@ export default function TrackMedicine({
   }
 
   function checkboxFn(date, medID, trackerTable) {
-    // console.log(trackerTable);
-    // return false;
     let TT = trackerTable.tracker.details[date.date() - 1];
 
     if (!TT) {
       // throw new Error(
       //   ` trackerTable.tracker.details[date.date() - 1] = ${TT} date = ${date.date()}`
       // );
-      console.log(`trackerTable.tracker.details[date.date() - 1] is ${TT}`);
       return false;
     }
 
@@ -197,7 +192,7 @@ export default function TrackMedicine({
       if (val[0].medID) return val[0].medID;
       else {
         throw new Error(
-          "The MedicineTiming State variables mapping to arr of MedIDs failed"
+          `The MedicineTiming State variables mapping to arr of MedIDs failed val: ${val} val[0]: ${val[0]}`
         );
       }
     });
@@ -250,7 +245,6 @@ export default function TrackMedicine({
     function nextPurchase(purchases, purchaseIdx, medID) {
       while (purchaseIdx.i < purchases.length) {
         let purArr = purchases[purchaseIdx.i];
-        console.log(purArr);
         let purObj = purArr.purchase.find((v) => v.medicine._id === medID);
 
         if (purObj !== undefined) {
@@ -272,10 +266,10 @@ export default function TrackMedicine({
      * @param {*} checkboxProps
      * @returns
      */
-    function markAsDisabled(timeFrom, timeTo, medID, checkboxProps) {
+    function markAsDisabled(timeFrom, timeTo, medID, checkboxProps, LDMA) {
       let month = timeFrom.format("MMMM YYYY");
       let lastmonthIdx = 0;
-
+      let max_no_of_months = 12 * 20;
       let allMarked = false;
 
       let monthObj = checkboxProps.find((obj, idx1) => {
@@ -288,7 +282,7 @@ export default function TrackMedicine({
       if (!monthObj) {
         return null;
       }
-      while (true) {
+      while (max_no_of_months--) {
         let ts = monthObj.ckBxProps.find((v) => v.medID === medID);
         if (!ts) {
           return null;
@@ -299,7 +293,18 @@ export default function TrackMedicine({
         for (let i = 0; i < ts.length; i++) {
           if (allMarked) break;
           for (let j = 0; j < ts[i].length; j++) {
-            if (ts[i][j].date.isAfter(timeTo, "D")) {
+            if (timeFrom.isSame(timeTo, "D")) {
+              if (
+                ts[i][j].date.isAfter(timeFrom, "m") ||
+                ts[i][j].date.isSame(timeFrom, "m")
+              ) {
+                ts[i][j].disabled = true;
+              }
+            }
+            if (
+              ts[i][j].date.isAfter(timeTo, "D") ||
+              ts[i][j].date.isSame(timeTo, "D")
+            ) {
               allMarked = true;
               break;
             } else if (
@@ -314,12 +319,13 @@ export default function TrackMedicine({
         }
 
         if (allMarked) break;
-        lastmonthIdx++;
+        lastmonthIdx--;
         monthObj = checkboxProps[lastmonthIdx];
         if (!monthObj) {
           return null;
         }
       }
+
       return true;
     }
 
@@ -328,21 +334,7 @@ export default function TrackMedicine({
      * @param {*} MT_ALL_MONTHS
      * @returns {Array<medID>}
      */
-    function getAllMedID(MT_ALL_MONTHS) {
-      // let medIdSet = new Set();
-
-      // for(let i=0;i<MT_ALL_MONTHS.length;i++){
-      //   for(let j=0;j<MT_ALL_MONTHS[i].medicineTimings.length;j++){
-      //     if(!medIdSet.has(MT_ALL_MONTHS[i].medicineTimings[j].medID)){
-
-      //       medIdSet.add( MT_ALL_MONTHS[i].medicineTimings[j].medID );
-
-      //     }
-      //   }
-      // }
-
-      // return Array.from(medIdSet);
-
+    function getAllMedID() {
       let pres = patient.prescription;
 
       let medIDArr = [];
@@ -352,6 +344,44 @@ export default function TrackMedicine({
       });
 
       return medIDArr;
+    }
+
+    /**
+     *
+     * @param {dayjs} time
+     * @param {object} checkboxProps
+     * @param {string} medID
+     * @returns {dayjs} nextTiming
+     *
+     */
+    function nextTime(time, checkboxProps, medID) {
+      let nxtime = null;
+      let idx1 = 0;
+      while (nxtime === null) {
+        let mon = time.add(idx1++, "month").format("MMMM YYYY");
+
+        let checkboxPropsMonth = checkboxProps.find((val) => val.month === mon);
+        if (checkboxPropsMonth === undefined) {
+          return time.add(1, "minute");
+        }
+        let ts = checkboxPropsMonth.ckBxProps.find(
+          (val) => val.medID === medID
+        );
+        ts = ts.times;
+        let found = false;
+        for (let i = 0; i < ts.length; i++) {
+          if (found) break;
+          for (let j = 0; j < ts[i].length; j++) {
+            if (found) break;
+            if (ts[i][j].date.isAfter(time, "minute")) {
+              nxtime = ts[i][j].date;
+              found = true;
+            }
+          }
+        }
+      }
+
+      return nxtime;
     }
 
     /**
@@ -371,8 +401,9 @@ export default function TrackMedicine({
       lastDay
     ) {
       let mon = timeFrom.format("MMMM YYYY");
-
-      while (true) {
+      let max_no_of_months = 12 * 20;
+      let lastMedTime = null;
+      while (max_no_of_months--) {
         let a = checkboxProps.find((val) => val.month === mon);
         if (a === undefined) {
           return null;
@@ -384,26 +415,36 @@ export default function TrackMedicine({
         let ts = b.times;
         let inventory_depleted = false;
         let iter_completed = false;
-        for (let i = timeFrom.date() - 1; i < ts.length; i++) {
+        for (let i = 0; i < ts.length; i++) {
           if (inventory_depleted || iter_completed) break;
+
+          if (lastDay.isBefore(dayjs(`${i + 1} ${mon}`, "D MMMM YYYY"), "D")) {
+            iter_completed = true;
+            LDMA.completed = true;
+            break;
+          }
+
           for (let j = 0; j < ts[i].length; j++) {
+            lastMedTime = ts[i][j].date;
             if (ts[i][j].date.isBefore(timeFrom, "minute")) {
               continue;
             }
             if (
               lastDay.isBefore(dayjs(`${i + 1} ${mon}`, "D MMMM YYYY"), "D")
             ) {
+              LDMA.time = ts[i][j].date;
               iter_completed = true;
               LDMA.completed = true;
               break;
             }
 
+            quantity_of_purchase--;
+
             if (quantity_of_purchase <= 0) {
               inventory_depleted = true;
-              LDMA.time = ts[i][j].date;
+              LDMA.time = nextTime(ts[i][j].date, checkboxProps, medID);
               break;
             }
-            quantity_of_purchase--;
           }
         }
         if (inventory_depleted) {
@@ -414,10 +455,10 @@ export default function TrackMedicine({
           mon = timeFrom.add(1, "month").format("MMMM YYYY");
         }
       }
+      if (lastMedTime) LDMA.time = lastMedTime.add(1, "minute");
     }
 
     let purchases = await getPurchases(patient._id);
-    console.log(`Purchases length: ${purchases.length}`);
 
     purchases.sort((a, b) => {
       if (dayjs(a.time).isBefore(dayjs(b.time))) {
@@ -472,32 +513,25 @@ export default function TrackMedicine({
     //Reversing the arrays of MTs to get chronological order of MT in earliest --> latest
     MT_ALL_MONTHS.reverse();
 
-    /**
-     * [
-     *    {
-     *      time:dayjs,
-     *      medID
-     *    }
-     * ]
-     */
-
     let purchaseIdx = { i: 0 },
       date_of_purchase;
 
-    let medIDArr = getAllMedID(MT_ALL_MONTHS);
+    let medIDArr = getAllMedID();
     for (let i = 0; i < medIDArr.length; i++) {
       let medID = medIDArr[i];
       purchaseIdx = { i: 0 };
       let [firstDay, lastDay] = getFirstNLastDay(medID);
       let currDay = firstDay;
       let quantity_of_purchase;
+      let max_no_of_purchases = 1000;
+
       /**
        * {time:dayjs}
        */
       let LDMA = {};
 
       //PURCHASE LOOP
-      while (true) {
+      while (max_no_of_purchases--) {
         debugger;
         let nxPur = nextPurchase(purchases, purchaseIdx, medID);
         purchaseIdx.i++;
@@ -506,14 +540,26 @@ export default function TrackMedicine({
 
           if (!!LDMA?.time) {
             if (date_of_purchase.isAfter(LDMA.time, "D")) {
-              markAsDisabled(LDMA.time, date_of_purchase, medID, checkboxProps);
+              markAsDisabled(
+                LDMA.time,
+                date_of_purchase,
+                medID,
+                checkboxProps,
+                LDMA
+              );
               currDay = date_of_purchase.hour(0).minute(0);
             } else {
               currDay = LDMA.time;
             }
           } else {
             if (date_of_purchase.isAfter(firstDay, "D")) {
-              markAsDisabled(firstDay, date_of_purchase, medID, checkboxProps);
+              markAsDisabled(
+                firstDay,
+                date_of_purchase,
+                medID,
+                checkboxProps,
+                LDMA
+              );
               currDay = date_of_purchase;
             } else {
               currDay = firstDay;
@@ -523,13 +569,15 @@ export default function TrackMedicine({
           if (LDMA?.time) {
             markAsDisabled(
               LDMA.time,
-              lastDay.add(1, "D"),
+              lastDay.add(1, "d"),
               medID,
-              checkboxProps
+              checkboxProps,
+              LDMA
             );
           } else if (LDMA?.completed === undefined) {
-            let endDate = lastDay.add(1, "D");
-            markAsDisabled(firstDay, endDate, medID, checkboxProps);
+            let endDate = lastDay.add(1, "d");
+            dayjs();
+            markAsDisabled(firstDay, endDate, medID, checkboxProps, LDMA);
           }
           break;
         }
@@ -545,7 +593,14 @@ export default function TrackMedicine({
       }
     }
     setCheckboxProps(checkboxProps);
-    console.log(checkboxProps);
+
+    let checkboxPropsMonth = checkboxProps.find((val) => {
+      return val.month === month;
+    });
+    if (checkboxPropsMonth !== undefined) {
+      checkboxPropsMonth = checkboxPropsMonth.ckBxProps;
+      setCheckboxPropsMonth(checkboxPropsMonth);
+    }
   };
 
   const setUp = async () => {
@@ -568,6 +623,14 @@ export default function TrackMedicine({
       }
       setMedAlertPills(res);
     }
+
+    let checkboxPropsMonth = checkboxProps.find((val) => {
+      return val.month === month;
+    });
+    if (checkboxPropsMonth !== undefined) {
+      checkboxPropsMonth = checkboxPropsMonth.ckBxProps;
+      setCheckboxPropsMonth(checkboxPropsMonth);
+    }
   };
 
   const fn_setAvailableMonth = () => {
@@ -588,7 +651,7 @@ export default function TrackMedicine({
 
   useEffect(() => {
     let AMs = fn_setAvailableMonth();
-    // setUp2(AMs);
+    setUp2(AMs);
   }, []);
 
   useEffect(() => {
@@ -597,7 +660,6 @@ export default function TrackMedicine({
 
   useEffect(() => {
     setUp();
-    // console.log(`Month changed to ${month}`);
   }, [month]);
 
   useEffect(() => {
@@ -613,26 +675,16 @@ export default function TrackMedicine({
    */
 
   function onCheckBoxChange(e, date, medID) {
-    // console.log("medID= ");
-    // console.log(medID);
-
     let checked = e.target.checked;
     let day = date.date();
     let TT = trackerTable.tracker.details[day - 1];
-    // console.log(`TT =`);
-    // console.log(TT);
     let hasTheDate =
       TT.findIndex((val) => {
         return (
           dayjs(val.time).isSame(date, "minutes") && val.medicine._id == medID
         );
       }) !== -1;
-    // console.log(`hasTheDate = `);
-    // console.log(hasTheDate);
     let medicine = medicines.find((med) => med._id.toString() == medID);
-    // console.log(`medicine = `);
-    // console.log(medicine);
-    // console.log(medicine._id);
 
     if (checked === true && hasTheDate !== true) {
       setTrackerTable((prevState) => {
@@ -660,6 +712,37 @@ export default function TrackMedicine({
 
     let MT = setMedicineTimings();
     setCheckBoxValueFn(MT, trackerTable);
+  }
+
+  function fn_is_disabled(idx1, idx2, idx3) {
+    let a, b, c;
+    if (idx1 < checkboxPropsMonth.length) {
+      a = checkboxPropsMonth[idx1];
+    } else {
+      return false;
+    }
+    if (a?.times?.length === undefined) {
+      return false;
+    }
+
+    if (idx2 - 1 < a.times.length && idx2 - 1 >= 0) {
+      b = a.times[idx2 - 1];
+    } else {
+      return false;
+    }
+    if (b?.length === undefined) {
+      return false;
+    }
+
+    if (idx3 < b.length) {
+      c = b[idx3]?.disabled;
+    }
+
+    if (c === undefined) {
+      return false;
+    } else {
+      return c;
+    }
   }
 
   return (
@@ -706,9 +789,9 @@ export default function TrackMedicine({
               <MenuItem key={"NONE"} value={""}>
                 None
               </MenuItem>
-              {availableMonths.map((mon, idx1) => {
+              {availableMonths.map((mon, monIdx1) => {
                 return (
-                  <MenuItem key={idx1} value={mon}>
+                  <MenuItem key={monIdx1} value={mon}>
                     {mon}
                   </MenuItem>
                 );
@@ -768,7 +851,7 @@ export default function TrackMedicine({
                                   width: "4rem",
                                 },
                               }}
-                              disabled={dayjs(t).isAfter(dayjs(), "day")}
+                              disabled={fn_is_disabled(idx1, idx2, i)}
                             />
                           );
                         })}

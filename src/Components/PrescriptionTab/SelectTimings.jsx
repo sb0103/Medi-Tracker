@@ -256,6 +256,7 @@ function SelectWeeklyTimings({
         <Container sx={{ m: "1rem", p: "0", pr: "1rem", width: "100%" }}>
           <DatePicker
             fullWidth
+            format="DD/MMM/YYYY"
             sx={{ width: "100%" }}
             label="Starting Date"
             value={dayjs(firstDay, "D/M/YYYY")}
@@ -268,6 +269,7 @@ function SelectWeeklyTimings({
         <Container sx={{ m: "1rem", p: "0", pr: "1rem", width: "100%" }}>
           <DatePicker
             fullWidth
+            format="DD/MMM/YYYY"
             sx={{ width: "100%" }}
             label="End Date"
             value={dayjs(lastDay, "D/M/YYYY")}
@@ -282,7 +284,11 @@ function SelectWeeklyTimings({
       <Button
         variant="outlined"
         onClick={() => {
-          setRepeations([...repetations, { time: "00:00" }]);
+          if (Array.isArray(repetations))
+            setRepeations([...repetations, { time: "00:00" }]);
+          else {
+            setRepeations([{ time: "00:00" }]);
+          }
         }}
         disabled={viewOnly}
       >
@@ -404,6 +410,7 @@ function SelectMonthlyTimings({
         <Container sx={{ m: "1rem", p: "0", pr: "1rem", width: "100%" }}>
           <DatePicker
             fullWidth
+            format="DD/MMM/YYYY"
             sx={{ width: "100%" }}
             label="Starting Date"
             value={dayjs(firstDay, "D/M/YYYY")}
@@ -416,6 +423,7 @@ function SelectMonthlyTimings({
         <Container sx={{ m: "1rem", p: "0", pr: "1rem", width: "100%" }}>
           <DatePicker
             fullWidth
+            format="DD/MMM/YYYY"
             sx={{ width: "100%" }}
             label="End Date"
             value={dayjs(lastDay, "D/M/YYYY")}

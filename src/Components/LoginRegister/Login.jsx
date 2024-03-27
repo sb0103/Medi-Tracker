@@ -14,15 +14,15 @@ export default function Login({ setAlert, logged, setLogged, setUserDetails }) {
   let history = useHistory();
 
   useEffect(() => {
-    // if (logged.isLogged === true) {
-    //   history.push("/app");
-    //   setAlert({
-    //     isOpen: true,
-    //     message:
-    //       "Already Logged In, Logout to LoginRegister with another email and password",
-    //     severity: "info",
-    //   });
-    // }
+    if (logged.isLogged === true) {
+      history.push("/app");
+      setAlert({
+        isOpen: true,
+        message:
+          "Already Logged In, Logout to LoginRegister with another email and password",
+        severity: "info",
+      });
+    }
 
     let data = JSON.parse(localStorage.getItem("loginData"));
 

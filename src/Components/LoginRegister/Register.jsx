@@ -64,11 +64,14 @@ export default function Register({
 
       setUserDetails({ username, email });
       setLogged({ isLogged: true, token: token });
+      window.setTimeout(() => {
+        history.push("/app");
+      }, 1000);
     }
   }, []);
 
   useEffect(() => {
-    history.push("/app");
+    if (logged.isLogged === true) history.push("/app");
   }, [logged]);
 
   return (

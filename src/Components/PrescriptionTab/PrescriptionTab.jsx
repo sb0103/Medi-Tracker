@@ -52,8 +52,6 @@ export default function PrescriptionTab({
 
       firstDay = dayjs(firstDay, "D/M/YYYY");
       lastDay = dayjs(lastDay, "D/M/YYYY");
-      // console.log(firstDay);
-      // console.log(lastDay);
       if (lastDay.isBefore(firstDay, "d")) {
         setAlert({
           isOpen: true,

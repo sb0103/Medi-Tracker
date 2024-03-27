@@ -85,7 +85,6 @@ export default function TrackerTab({ medicines, patients, logged }) {
 
   const fetchTracker = (patientsAllTracker, patientID, month) => {
     let tracker = patientsAllTracker.find((t) => {
-      // console.log(t.month);
       return t.month.match(new RegExp(`${month}`, "i")) !== null;
     });
 
@@ -245,7 +244,6 @@ export default function TrackerTab({ medicines, patients, logged }) {
                 ]);
               }}
               onClose={async (success) => {
-                // console.log(verifyPurchases(formInputPurchase), success);
                 if (success && verifyPurchases(formInputPurchase)) {
                   let map = new Map();
                   for (let i = 0; i < medicines.length; i++) {
