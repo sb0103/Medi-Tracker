@@ -232,6 +232,7 @@ export default function TrackerTab({ medicines, patients, logged }) {
                   age={patient.age}
                   bmi={patient.bmi}
                   medicines={medicines}
+                  prescription={patient.prescription}
                   formInput={formInputPurchase}
                   setFormInput={setFormInputPurchase}
                   purchaseDate={purchaseDate}

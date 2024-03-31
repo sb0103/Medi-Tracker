@@ -86,13 +86,14 @@ export default function PrescriptionTab({
         title="Do you want to clear old tracker data?"
         content=""
         form={
-          <Typography sx={{ fontWeight: 300 }}>
-            This action will clear All the Tracker data, procced with caution
-            <br />
-            only clear the data if it is not just an addition of new medicine
-            <br />
-            but a new prescription for the patient.
-          </Typography>
+          <>
+            <Typography sx={{ fontWeight: 300 }}>
+              Do you want to clear the Old Tracker Data, to avoid mismatch with
+              the new prescription?
+              <br />
+            </Typography>
+            <Typography sx={{ fontSize: "0.5rem" }}></Typography>
+          </>
         }
         onClose={async (success) => {
           if (success) {
@@ -179,8 +180,10 @@ export default function PrescriptionTab({
                       presc
                     )
                   ) {
-                    setToClearPatientID(val._id);
-                    setDialogBox(true);
+                    if (tempPres.length > 0) {
+                      setToClearPatientID(val._id);
+                      setDialogBox(true);
+                    }
                   }
                 } else {
                   let fn = (prescription) => {

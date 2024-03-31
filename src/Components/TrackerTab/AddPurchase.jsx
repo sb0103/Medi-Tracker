@@ -13,6 +13,7 @@ export default function AddPurchase({
   age = "",
   bmi = "",
   medicines,
+  prescription,
   formInput,
   setFormInput,
   purchaseDate,
@@ -74,7 +75,21 @@ export default function AddPurchase({
           return (
             <ListItem
               key={i}
-              medicines={medicines}
+              medicines={medicines.filter((med) => {
+                if (
+                  prescription.find((p) => {
+                    if (med._id === p.medID) {
+                      return true;
+                    } else {
+                      return false;
+                    }
+                  }) !== undefined
+                ) {
+                  return true;
+                } else {
+                  return false;
+                }
+              })}
               listItem={listItem}
               i={i}
               setListItem={(newListItem) => {
