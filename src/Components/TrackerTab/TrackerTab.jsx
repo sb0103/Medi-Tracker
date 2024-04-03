@@ -1,19 +1,26 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 import "./tracker-tab.css";
 
 import FormDialog from "../FormDialog/FormDialog";
 import SimpleAlert from "../Alert/Alert";
+import Badge from "@mui/material/Badge";
+
 import dayjs from "dayjs";
 
 import BasicTable from "../BasicTable/BasicTable";
 import AddPurchase from "./AddPurchase";
 import TrackMedicine from "./TrackMedicine";
 
+import WebWorker from "../WebWorker/webWorker.ts";
+
 import { postPurchase } from "../NetworkCalls/purchase";
 import { postTracker as pTracker, getTracker } from "../NetworkCalls/tracker";
 import { fetchInventory } from "../NetworkCalls/inventory";
 import { getPurchases } from "../NetworkCalls/purchase";
+
+import { TRACKER_START_MONTH } from "../../config/config";
+import { Box } from "@mui/material";
 
 export default function TrackerTab({ medicines, patients, logged }) {
   const [trackerTable, setTrackerTable] = useState({
@@ -56,6 +63,13 @@ export default function TrackerTab({ medicines, patients, logged }) {
     },
   });
   const [month, setMonth] = useState("January 2024");
+  const [workerInstance, setWorkerInstance] = useState(null);
+
+  const [availableMonths, setAvailableMonths] = useState([
+    "January 2024",
+    "December 2023",
+  ]);
+  const [allowMonthsAhead, setAllowMonthsAhead] = useState(6);
 
   const [formInputPurchase, setFormInputPurchase] = useState([
     { medicineName: "", doze: "", quantity: 0 },
@@ -63,6 +77,8 @@ export default function TrackerTab({ medicines, patients, logged }) {
   const [purchaseDate, setPurchaseDate] = useState(new Date().toUTCString());
 
   const [patientsAllTracker, setPatientsAllTracker] = useState([]);
+
+  const [patientBadges, setPatientBadges] = useState([]);
 
   const [alert, setAlert] = useState({
     isOpen: false,
@@ -158,6 +174,22 @@ export default function TrackerTab({ medicines, patients, logged }) {
     }
   };
 
+  const fn_setAvailableMonth = () => {
+    let AMs = [];
+
+    let d = dayjs().add(allowMonthsAhead, "M");
+    while (
+      d.isAfter(dayjs(TRACKER_START_MONTH, `MMMM YYYY`), "month") ||
+      d.isSame(dayjs(TRACKER_START_MONTH, `MMMM YYYY`), "month")
+    ) {
+      AMs.push(d.format(`MMMM YYYY`));
+      d = d.subtract(1, "M");
+    }
+
+    setAvailableMonths(AMs);
+    return AMs;
+  };
+
   /**
    *
    * @param {string} patientID
@@ -199,8 +231,54 @@ export default function TrackerTab({ medicines, patients, logged }) {
     );
   };
 
+  let addPatientPills = async (AM, wi) => {
+    for (let i = 0; i < patients.length; i++) {
+      let purchases = await getPur(patients[i]._id);
+      wi.queryFunction(
+        "noOfMedsUnavailable",
+        AM, //available months
+        patients[i]._id,
+        patients[i].prescription,
+        purchases
+      );
+    }
+  };
+
   useEffect(() => {
     setMonth(dayjs().format(`MMMM YYYY`));
+    let AM = fn_setAvailableMonth();
+    let wi = new WebWorker("app.worker.js");
+
+    wi.addListner("noOfMedsUnavailable", (data) => {
+      let { patientID, count } = data;
+      setPatientBadges((prevState) => {
+        let fIdx = prevState.findIndex((obj) => {
+          if (obj.patientID === patientID) {
+            return true;
+          } else {
+            return false;
+          }
+        });
+
+        if (fIdx === -1) {
+          return [...prevState, { patientID, count }];
+        } else {
+          return prevState.map((val, idx) => {
+            if (idx === fIdx) {
+              return { patientID, count };
+            } else {
+              return val;
+            }
+          });
+        }
+      });
+    });
+    addPatientPills(AM, wi);
+    setWorkerInstance(wi);
+
+    return function () {
+      if (workerInstance) workerInstance.terminate();
+    };
   }, []);
 
   return (
@@ -219,7 +297,15 @@ export default function TrackerTab({ medicines, patients, logged }) {
       <BasicTable
         headers={["Name", "Purchase", "View"]}
         rows={patients.map((patient, idx) => [
-          patient.name,
+          <Badge
+            badgeContent={
+              patientBadges.find((p) => p.patientID === patient._id)?.count
+            }
+            color="error"
+            max={999}
+          >
+            <Box sx={{ p: "0.5rem" }}>{patient.name}</Box>
+          </Badge>,
           <>
             <FormDialog
               btnVariant="outlined"
@@ -307,6 +393,9 @@ export default function TrackerTab({ medicines, patients, logged }) {
                   getInventory={getInventory}
                   addUpdateTracker={addUpdateTracker}
                   getPurchases={getPur}
+                  availableMonths={availableMonths}
+                  setAvailableMonths={setAvailableMonths}
+                  allowMonthsAhead={allowMonthsAhead}
                 />
               }
               onOpen={async () => {

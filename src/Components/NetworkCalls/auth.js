@@ -29,9 +29,14 @@ const login = async (body, setAlert) => {
  */
 const register = async (body, setAlert) => {
   try {
-    await axios.post(`${BE_URL}/auth/register`, body);
-    setAlert("User Successfully Registered.", "success");
-    return true;
+    let response = await axios.post(`${BE_URL}/auth/register`, body);
+    if (response.status === 200) {
+      setAlert("User Successfully Registered.", "success");
+      return true;
+    } else {
+      setAlert(response.data.message, "error");
+      return false;
+    }
   } catch (err) {
     if (err.response) {
       setAlert(err.response.data.message, "error");

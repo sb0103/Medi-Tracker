@@ -39,12 +39,10 @@ export default function TrackMedicine({
   getInventory,
   addUpdateTracker,
   getPurchases,
+  availableMonths,
+  setAvailableMonths,
+  allowMonthsAhead,
 }) {
-  const [availableMonths, setAvailableMonths] = useState([
-    "January 2024",
-    "December 2023",
-  ]);
-  const [allowMonthsAhead, setAllowMonthsAhead] = useState(6);
   const [diaBoxOpen, setDiaBoxOpen] = useState(false);
   const [newMonth, setNewMonth] = useState("");
 
@@ -532,7 +530,6 @@ export default function TrackMedicine({
 
       //PURCHASE LOOP
       while (max_no_of_purchases--) {
-        debugger;
         let nxPur = nextPurchase(purchases, purchaseIdx, medID);
         purchaseIdx.i++;
         if (nxPur !== null) {
@@ -665,7 +662,7 @@ export default function TrackMedicine({
   useEffect(() => {
     let MT = setMedicineTimings();
     setCheckBoxValueFn(MT, trackerTable);
-  }, [trackerTable.tracker.details, trackerTable]);
+  }, [trackerTable.tracker.details]);
 
   /**
    * The function checks for match of date and medicine in tracker table
