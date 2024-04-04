@@ -231,7 +231,7 @@ export default function TrackerTab({ medicines, patients, logged }) {
     );
   };
 
-  let addPatientPills = async (AM, wi) => {
+  let addPatientsPills = async (AM, wi) => {
     for (let i = 0; i < patients.length; i++) {
       let purchases = await getPur(patients[i]._id);
       wi.queryFunction(
@@ -241,6 +241,21 @@ export default function TrackerTab({ medicines, patients, logged }) {
         patients[i].prescription,
         purchases
       );
+    }
+  };
+
+  let addPatientPills = async (patientID) => {
+    for (let i = 0; i < patients.length; i++) {
+      if (patientID === patients[i]._id) {
+        let purchases = await getPur(patients[i]._id);
+        workerInstance.queryFunction(
+          "noOfMedsUnavailable",
+          availableMonths, //available months
+          patients[i]._id,
+          patients[i].prescription,
+          purchases
+        );
+      }
     }
   };
 
@@ -273,7 +288,7 @@ export default function TrackerTab({ medicines, patients, logged }) {
         }
       });
     });
-    addPatientPills(AM, wi);
+    addPatientsPills(AM, wi);
     setWorkerInstance(wi);
 
     return function () {
@@ -362,6 +377,8 @@ export default function TrackerTab({ medicines, patients, logged }) {
                     patient._id,
                     body
                   );
+
+                  addPatientPills(patient._id);
                 } else if (success) {
                   setAlert({
                     isOpen: true,
