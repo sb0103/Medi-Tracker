@@ -438,7 +438,11 @@ function SelectMonthlyTimings({
       <Button
         variant="outlined"
         onClick={() => {
-          setRepeations([...repetations, { time: "00:00" }]);
+          if (Array.isArray(repetations)) {
+            setRepeations([...repetations, { time: "00:00" }]);
+          } else {
+            setRepeations([{ time: "00:00" }]);
+          }
         }}
         disabled={viewOnly}
       >

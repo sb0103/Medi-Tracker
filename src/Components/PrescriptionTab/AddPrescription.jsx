@@ -101,7 +101,15 @@ export default function AddPrescription({
           return (
             <ListItem
               key={i}
-              medicines={medicines}
+              medicines={medicines.filter(
+                (med) =>
+                  prescription.find((item) => {
+                    if (item.medID === med._id) {
+                      return true;
+                    }
+                    return false;
+                  }) === undefined
+              )}
               listItem={listItem}
               i={i}
               setListItem={(newListItem, i) => {
